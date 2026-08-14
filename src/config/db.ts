@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 export const connectDB = async () => {
   try {
-    await mongoose.connect("mongodb+srv://tusharkartik06_db_user:YMCNKwfTTjYFqsNd@cluster0.bz2azbh.mongodb.net/Second-brain");
 
     console.log("MongoDB connected");
   } catch (error) {
