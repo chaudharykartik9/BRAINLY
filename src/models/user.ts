@@ -1,71 +1,41 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import { Schema, model, Document } from 'mongoose';
 
-export type ContentType = 'tweet' | 'youtube' | 'article' | 'audio' | 'document' | 'thought';
-
-export interface IContent extends Document {
-  title: string;
-  type: ContentType;
-  link?: string;
-  notes?: string;
-  tags: Types.ObjectId[];
-  userId: Types.ObjectId;
-  isPinned: boolean;
-  metadata?: {
-    thumbnail?: string;
-    author?: string;
-    description?: string;
-  };
+export interface IUser extends Document {
+  username: string;
+  email: string;
+  password?: string;
+  avatarUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const contentSchema = new Schema<IContent>(
+const userSchema = new Schema<IUser>(
   {
-    title: {
+    username: {
       type: String,
-      required: [true, 'Title is required'],
+      required: [true, 'Username is required'],
+      unique: true,
+      trim: true,
+      minlength: [3, 'Username must be at least 3 characters'],
+    },
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+      lowercase: true,
       trim: true,
     },
-    type: {
+    password: {
       type: String,
-      enum: ['tweet', 'youtube', 'article', 'audio', 'document', 'thought'],
-      required: true,
-      default: 'thought',
+      required: [true, 'Password is required'],
+      select: false, // Prevents sending hash in queries by default
     },
-    link: {
-      type: String,
-      trim: true,
-    },
-    notes: {
+    avatarUrl: {
       type: String,
       default: '',
-    },
-    tags: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Tag',
-      },
-    ],
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-      index: true, // Speeds up dashboard queries per user
-    },
-    isPinned: {
-      type: Boolean,
-      default: false,
-    },
-    metadata: {
-      thumbnail: { type: String },
-      author: { type: String },
-      description: { type: String },
     },
   },
   { timestamps: true }
 );
 
-// Compound index for querying user items filtered by type/creation date
-contentSchema.index({ userId: 1, type: 1, createdAt: -1 });
-
-export const Content = model<IContent>('Content', contentSchema);
+export const User = model<IUser>('User', userSchema);
