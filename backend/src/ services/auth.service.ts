@@ -18,7 +18,23 @@ export class AuthService {
       email,
       password: hashedPassword,
     });
-    return { id: user._id, username: user.username, email: user.email };
+
+    const token = jwt.sign(
+      { id: String(user._id), email: user.email },
+      ENV.JWT_SECRET,
+      {
+        expiresIn: ENV.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"],
+      },
+    );
+
+    return {
+      token,
+      user: {
+        id: String(user._id),
+        username: user.username,
+        email: user.email,
+      },
+    };
   }
 
   static async signin(email: string, password: string) {
@@ -33,7 +49,7 @@ export class AuthService {
     if (!isMatch) throw new Error("Invalid credentials");
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: String(user._id), email: user.email },
       ENV.JWT_SECRET,
       {
         expiresIn: ENV.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"],
@@ -42,7 +58,11 @@ export class AuthService {
 
     return {
       token,
-      user: { id: user._id, username: user.username, email: user.email },
+      user: {
+        id: String(user._id),
+        username: user.username,
+        email: user.email,
+      },
     };
   }
 }

@@ -1,21 +1,34 @@
-import 'dotenv/config'; // Loads the .env file immediately
 import mongoose from 'mongoose';
+import { ENV } from './env.js';
 
-// 1. Read the variable
-const mongoURI = process.env.MONGO_URI;
+const LOCAL_FALLBACK_URI = 'mongodb://127.0.0.1:27017/brainly';
+
+const redactUri = (uri: string) =>
+  uri.replace(/\/\/([^@/]+@)/, '//***@');
 
 export const connectDB = async () => {
-  // FIX: Throw an error if the variable is missing to satisfy TypeScript
-  if (!mongoURI) {
-    throw new Error("MONGO_URI is not defined in the .env file");
+  const uris =
+    ENV.NODE_ENV === 'development' && ENV.MONGO_URI.startsWith('mongodb+srv')
+      ? [ENV.MONGO_URI, LOCAL_FALLBACK_URI]
+      : [ENV.MONGO_URI];
+
+  let lastError: unknown;
+
+  for (const uri of uris) {
+    try {
+      await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
+      console.log(`MongoDB connected (${redactUri(uri)})`);
+      return;
+    } catch (error) {
+      lastError = error;
+      console.warn(`MongoDB connection failed for ${redactUri(uri)}`);
+
+      if (mongoose.connection.readyState !== 0) {
+        await mongoose.disconnect();
+      }
+    }
   }
 
-  try {
-    // TypeScript now knows mongoURI is strictly a string
-    await mongoose.connect(mongoURI);
-    console.log("MongoDB connected");
-  } catch (error) {
-    console.error("MongoDB connection failed:", error);
-    process.exit(1);
-  }
+  console.error('MongoDB connection failed:', lastError);
+  process.exit(1);
 };

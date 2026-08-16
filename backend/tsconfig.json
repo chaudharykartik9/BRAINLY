@@ -7,7 +7,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ESNext"],
-    "types": ["node"],
+    "types": ["node", "cors", "express", "jsonwebtoken"],
     "typeRoots": ["./node_modules/@types", "./src/types"],
 
     "strict": true,
