@@ -127,9 +127,9 @@ export const ContentCard: React.FC<ContentCardProps> = ({
         {/* Tags */}
         {tags && tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-4">
-            {tags.map((tag, idx) => (
-              <Badge key={`${tag}-${idx}`} variant="primary">
-                {tag}
+            {tags.map((tag) => (
+              <Badge key={tag._id} variant="primary">
+                {tag.title}
               </Badge>
             ))}
           </div>

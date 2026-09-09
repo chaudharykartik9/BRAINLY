@@ -29,11 +29,13 @@ export class ContentService {
       }
     }
 
-    return await Content.create({
+    const content = await Content.create({
       ...data,
       tags: tagIds,
       userId,
     });
+
+    return content.populate("tags", "title");
   }
 
   static async getUserContents(userId: string, filterType?: string) {

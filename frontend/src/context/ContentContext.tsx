@@ -70,7 +70,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         !query ||
         item.title?.toLowerCase().includes(query) ||
         item.description?.toLowerCase().includes(query) ||
-        item.tags?.some((tag) => tag.toLowerCase().includes(query));
+        item.tags?.some((tag) => tag.title.toLowerCase().includes(query));
 
       return matchesType && matchesSearch;
     });

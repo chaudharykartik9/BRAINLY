@@ -86,7 +86,7 @@ const handleToggleShare = async (isPublic: boolean): Promise<string | null> => {
         !q ||
         item.title.toLowerCase().includes(q) ||
         item.description?.toLowerCase().includes(q) ||
-        item.tags?.some((tag) => tag.toLowerCase().includes(q));
+        item.tags?.some((tag) => tag.title.toLowerCase().includes(q));
 
       return matchesType && matchesSearch;
     });

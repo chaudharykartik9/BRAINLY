@@ -11,7 +11,7 @@ export interface IContent {
   type: ContentType;
   link?: string;
   description?: string;
-  tags?: string[];
+  tags?: ITag[];
   userId?: string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
