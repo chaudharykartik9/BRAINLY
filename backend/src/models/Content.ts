@@ -1,6 +1,6 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
-export type ContentType = 'tweet' | 'youtube' | 'article' | 'audio' | 'document' | 'thought';
+export type ContentType = 'twitter' | 'youtube' | 'article' | 'link' | 'document' | 'thought';
 
 export interface IContent extends Document {
   title: string;
@@ -28,7 +28,7 @@ const contentSchema = new Schema<IContent>(
     },
     type: {
       type: String,
-      enum: ['tweet', 'youtube', 'article', 'audio', 'document', 'thought'],
+      enum: ['twitter', 'youtube', 'article', 'link', 'document', 'thought'],
       required: true,
       default: 'thought',
     },

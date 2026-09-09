@@ -1,38 +1,26 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import type { IContent } from '../../types/content.types';
 import { Badge } from '../common/Badge';
+import { ConfirmDialog } from '../common/ConfirmDialog';
+import { ContentPreview } from './ContentPreview';
 import { DocumentIcon, ExternalLinkIcon, LinkIcon, TrashIcon, TwitterIcon, YoutubeIcon } from '../icons';
-import { getYouTubeEmbedUrl } from '../../utils/youtube';
-import { formatRelativeDate } from '../../utils/formatters.ts';
+import { formatRelativeDate } from '../../utils/formatters';
 
 interface ContentCardProps {
   content: IContent;
   onDelete?: (id: string) => void;
   isReadOnly?: boolean;
 }
-//frontend/src/utils/formatters.ts
+
 export const ContentCard: React.FC<ContentCardProps> = ({
   content,
   onDelete,
   isReadOnly = false,
 }) => {
-  const { _id, title, type, link, description, tags, createdAt } = content;
-
-  // Load Twitter widgets script dynamically if Twitter card is present
-  useEffect(() => {
-    if (type === 'twitter') {
-      const win = window as unknown as { twttr?: { widgets?: { load?: () => void } } };
-      if (!win.twttr) {
-        const script = document.createElement('script');
-        script.src = 'https://platform.twitter.com/widgets.js';
-        script.async = true;
-        script.charset = 'utf-8';
-        document.body.appendChild(script);
-      } else {
-        win.twttr.widgets?.load?.();
-      }
-    }
-  }, [type, link]);
+  const { _id, title, type, link, notes, tags, createdAt } = content;
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const renderIcon = () => {
     switch (type) {
@@ -48,99 +36,150 @@ export const ContentCard: React.FC<ContentCardProps> = ({
     }
   };
 
-  const renderEmbed = () => {
-    if (type === 'youtube' && link) {
-      const embedUrl = getYouTubeEmbedUrl(link);
-      return embedUrl ? (
-        <div className="w-full aspect-video rounded-xl overflow-hidden mt-3 bg-slate-100">
-          <iframe
-            src={embedUrl}
-            title={title}
-            className="w-full h-full border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-      ) : null;
-    }
+  // Clicking anywhere on the card opens the saved URL directly.
+  const isClickable = !isReadOnly && !!link;
 
-    if (type === 'twitter' && link) {
-      const cleanUrl = link.replace('x.com', 'twitter.com');
-      return (
-        <div className="mt-3 overflow-hidden rounded-xl bg-slate-50 border border-slate-100 flex justify-center max-h-96 overflow-y-auto">
-          <blockquote className="twitter-twitter" data-conversation="none">
-            <a href={cleanUrl}>Loading tweet...</a>
-          </blockquote>
-        </div>
-      );
-    }
-
-    return null;
+  const openLink = () => {
+    if (!isClickable) return;
+    window.open(link, '_blank', 'noopener,noreferrer');
   };
 
+  const handleCardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!isClickable) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openLink();
+    }
+  };
+
+  // Shares the saved link (native share sheet where available, clipboard
+  // copy otherwise) — never navigates to the page itself.
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!link) return;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, url: link });
+      } catch {
+        // User cancelled the native share sheet — nothing to do.
+      }
+      return;
+    }
+
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!onDelete) return;
+    try {
+      setIsDeleting(true);
+      await onDelete(_id);
+    } finally {
+      setIsDeleting(false);
+      setIsConfirmOpen(false);
+    }
+  };
+
+  // Document/link previews already surface the notes text inside their preview
+  // panel, so only show it separately for embed-style cards (no room for text there).
+  const showSeparateNotes = notes && (type === 'youtube' || type === 'twitter');
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between group">
-      <div>
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-slate-50 border border-slate-100 shrink-0">
-              {renderIcon()}
-            </span>
-            <h4 className="font-semibold text-slate-800 line-clamp-1 text-sm tracking-tight">
-              {title}
-            </h4>
+    <>
+      <div
+        className={`bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between group ${
+          isClickable ? 'cursor-pointer' : ''
+        }`}
+        onClick={openLink}
+        onKeyDown={handleCardKeyDown}
+        role={isClickable ? 'button' : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+        title={isClickable ? 'Open page' : undefined}
+      >
+        <div>
+          {/* Header */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="p-1.5 rounded-lg bg-slate-50 border border-slate-100 shrink-0">
+                {renderIcon()}
+              </span>
+              <h4 className="font-semibold text-slate-800 line-clamp-1 text-sm tracking-tight">
+                {title}
+              </h4>
+            </div>
+
+            <div className="flex items-center gap-1 shrink-0 text-slate-400">
+              {link && (
+                <button
+                  type="button"
+                  title={copied ? 'Copied!' : 'Share'}
+                  onClick={handleShare}
+                  className="p-1 hover:text-brand-600 transition-colors"
+                >
+                  <ExternalLinkIcon className="w-4 h-4" />
+                </button>
+              )}
+              {!isReadOnly && onDelete && (
+                <button
+                  type="button"
+                  title="Delete"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsConfirmOpen(true);
+                  }}
+                  className="p-1 hover:text-red-600 transition-colors"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-1 shrink-0 text-slate-400">
-            {link && (
-              <a
-                href={link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-1 hover:text-brand-600 transition-colors"
-              >
-                <ExternalLinkIcon className="w-4 h-4" />
-              </a>
-            )}
-            {!isReadOnly && onDelete && (
-              <button
-                onClick={() => onDelete(_id)}
-                className="p-1 hover:text-red-600 transition-colors"
-              >
-                <TrashIcon className="w-4 h-4" />
-              </button>
-            )}
+          {/* Preview */}
+          <div className="mt-3">
+            <ContentPreview content={content} />
           </div>
+
+          {/* Notes (embed-style cards only) */}
+          {showSeparateNotes && (
+            <p className="mt-3 text-sm text-slate-600 line-clamp-3 leading-relaxed">{notes}</p>
+          )}
+
+          {/* Tags */}
+          {tags && tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-4">
+              {tags.map((tag) => (
+                <Badge key={tag._id} variant="primary">
+                  {tag.title}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Media / Embed Area */}
-        {renderEmbed()}
-
-        {/* Description / Content Body */}
-        {description && (
-          <p className="mt-3 text-sm text-slate-600 line-clamp-3 leading-relaxed">
-            {description}
-          </p>
-        )}
-
-        {/* Tags */}
-        {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-4">
-            {tags.map((tag) => (
-              <Badge key={tag._id} variant="primary">
-                {tag.title}
-              </Badge>
-            ))}
-          </div>
-        )}
+        {/* Footer */}
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+          <span>Added {formatRelativeDate(createdAt)}</span>
+          <span className="capitalize font-medium">{type}</span>
+        </div>
       </div>
 
-      {/* Footer */}
-      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-        <span>Added {formatRelativeDate(createdAt)}</span>
-        <span className="capitalize font-medium">{type}</span>
-      </div>
-    </div>
+      {!isReadOnly && (
+        <ConfirmDialog
+          isOpen={isConfirmOpen}
+          title="Delete this content?"
+          message="Are you sure you want to delete this content? This action cannot be undone."
+          confirmLabel="Delete"
+          loading={isDeleting}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setIsConfirmOpen(false)}
+        />
+      )}
+    </>
   );
 };

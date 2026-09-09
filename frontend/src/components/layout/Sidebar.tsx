@@ -17,7 +17,7 @@ const navItems: { label: string; type: ContentType | 'all'; icon: React.ReactNod
 
 export const Sidebar: React.FC<SidebarProps> = ({ selectedType, onSelectType }) => {
   return (
-    <aside className="w-72 bg-white border-r border-slate-100 flex flex-col h-screen fixed left-0 top-0 z-30">
+    <aside className="w-72 bg-white border-r border-slate-100 hidden lg:flex flex-col h-screen fixed left-0 top-0 z-30">
       {/* Brand Header */}
       <div className="flex items-center gap-3 px-6 h-20 border-b border-slate-100">
         <div className="p-2 bg-brand-50 text-brand-600 rounded-xl">

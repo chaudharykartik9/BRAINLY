@@ -69,7 +69,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const matchesSearch =
         !query ||
         item.title?.toLowerCase().includes(query) ||
-        item.description?.toLowerCase().includes(query) ||
+        item.notes?.toLowerCase().includes(query) ||
         item.tags?.some((tag) => tag.title.toLowerCase().includes(query));
 
       return matchesType && matchesSearch;

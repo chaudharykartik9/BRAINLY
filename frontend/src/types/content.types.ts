@@ -10,7 +10,7 @@ export interface IContent {
   title: string;
   type: ContentType;
   link?: string;
-  description?: string;
+  notes?: string;
   tags?: ITag[];
   userId?: string;
   createdAt?: string | Date;
@@ -21,6 +21,6 @@ export interface CreateContentInput {
   title: string;
   type: ContentType;
   link?: string;
-  description?: string;
+  notes?: string;
   tags?: string[];
 }

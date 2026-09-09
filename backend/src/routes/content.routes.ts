@@ -10,7 +10,7 @@ const router = Router();
 const createContentSchema = z.object({
   body: z.object({
     title: z.string().min(1, 'Title is required'),
-    type: z.enum(['tweet', 'youtube', 'article', 'audio', 'document', 'thought']),
+    type: z.enum(['twitter', 'youtube', 'article', 'link', 'document', 'thought']),
     link: z.string().url().optional().or(z.literal('')), // Optional link or empty string
     notes: z.string().optional(),                        // Optional text notes
     tags: z.array(z.string()).optional(),                // Array of tag names e.g. ["tech", "ideas"]

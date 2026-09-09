@@ -27,11 +27,7 @@ export const DashboardPage: React.FC = () => {
     try {
       setLoading(true);
       const res = await contentApi.getAll();
-      // Safely extract the array whether returned directly or nested in ApiResponse.data
-      const contentList = Array.isArray(res.data) 
-        ? res.data 
-        : res.data.data || [];
-      setContents(contentList);
+      setContents(res.data);
     } catch (err) {
       console.error('Failed to fetch contents:', err);
     } finally {
@@ -45,8 +41,7 @@ export const DashboardPage: React.FC = () => {
 
   const handleAddContent = async (input: CreateContentInput) => {
     const res = await contentApi.create(input);
-    const newContent = res.data.data ?? (res.data as unknown as IContent);
-    setContents((prev) => [newContent, ...prev]);
+    setContents((prev) => [res.data, ...prev]);
   };
 
   const handleDeleteContent = async (contentId: string) => {
@@ -85,7 +80,7 @@ const handleToggleShare = async (isPublic: boolean): Promise<string | null> => {
       const matchesSearch =
         !q ||
         item.title.toLowerCase().includes(q) ||
-        item.description?.toLowerCase().includes(q) ||
+        item.notes?.toLowerCase().includes(q) ||
         item.tags?.some((tag) => tag.title.toLowerCase().includes(q));
 
       return matchesType && matchesSearch;
@@ -98,7 +93,7 @@ const handleToggleShare = async (isPublic: boolean): Promise<string | null> => {
       <Sidebar selectedType={selectedType} onSelectType={setSelectedType} />
 
       {/* Main Workspace */}
-      <div className="flex-1 ml-72 flex flex-col min-w-0">
+      <div className="flex-1 ml-0 lg:ml-72 flex flex-col min-w-0">
         <Navbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}

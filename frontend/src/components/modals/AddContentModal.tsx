@@ -25,7 +25,7 @@ export const AddContentModal: React.FC<AddContentModalProps> = ({
   const [title, setTitle] = useState('');
   const [type, setType] = useState<ContentType>('youtube');
   const [link, setLink] = useState('');
-  const [description, setDescription] = useState('');
+  const [notes, setNotes] = useState('');
   const [tagsInput, setTagsInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export const AddContentModal: React.FC<AddContentModalProps> = ({
     setTitle('');
     setType('youtube');
     setLink('');
-    setDescription('');
+    setNotes('');
     setTagsInput('');
     setError(null);
   };
@@ -63,7 +63,7 @@ export const AddContentModal: React.FC<AddContentModalProps> = ({
         title: title.trim(),
         type,
         link: link.trim() || undefined,
-        description: description.trim() || undefined,
+        notes: notes.trim() || undefined,
         tags: formattedTags,
       });
       handleClose();
@@ -130,8 +130,8 @@ export const AddContentModal: React.FC<AddContentModalProps> = ({
           <textarea
             rows={3}
             placeholder="Add key insights, summaries, or notes..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
             className="w-full px-3.5 py-2 text-sm rounded-xl border bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
           />
         </div>
