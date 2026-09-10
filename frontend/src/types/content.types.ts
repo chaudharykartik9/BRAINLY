@@ -13,6 +13,7 @@ export interface IContent {
   notes?: string;
   tags?: ITag[];
   userId?: string;
+  isPublic?: boolean;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }

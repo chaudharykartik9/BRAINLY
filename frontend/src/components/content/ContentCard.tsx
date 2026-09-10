@@ -9,17 +9,21 @@ import { formatRelativeDate } from '../../utils/formatters';
 interface ContentCardProps {
   content: IContent;
   onDelete?: (id: string) => void;
+  /** Publish/unpublish this item; resolves to its public single-item URL (or null). */
+  onPublish?: (id: string, isPublic: boolean) => Promise<string | null>;
   isReadOnly?: boolean;
 }
 
 export const ContentCard: React.FC<ContentCardProps> = ({
   content,
   onDelete,
+  onPublish,
   isReadOnly = false,
 }) => {
-  const { _id, title, type, link, notes, tags, createdAt } = content;
+  const { _id, title, type, link, notes, tags, createdAt, isPublic } = content;
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const renderIcon = () => {
@@ -52,25 +56,39 @@ export const ContentCard: React.FC<ContentCardProps> = ({
     }
   };
 
-  // Shares the saved link (native share sheet where available, clipboard
-  // copy otherwise) — never navigates to the page itself.
+  // Publishes this item (idempotent) and shares its public link — the native
+  // share sheet where available, clipboard copy otherwise. Never navigates.
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!link) return;
+    if (!onPublish) return;
+
+    let publicUrl: string | null = null;
+    try {
+      setIsPublishing(true);
+      publicUrl = await onPublish(_id, true);
+    } catch {
+      return; // publish failed — leave the card as-is
+    } finally {
+      setIsPublishing(false);
+    }
+    if (!publicUrl) return;
 
     if (navigator.share) {
       try {
-        await navigator.share({ title, url: link });
+        await navigator.share({ title, text: notes || undefined, url: publicUrl });
       } catch {
-        // User cancelled the native share sheet — nothing to do.
+        // AbortError (user cancelled) or any other failure — not fatal.
       }
       return;
     }
 
-    if (navigator.clipboard) {
-      await navigator.clipboard.writeText(link);
+    try {
+      if (!navigator.clipboard) return;
+      await navigator.clipboard.writeText(publicUrl);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard write denied — fail silently rather than show a false success.
     }
   };
 
@@ -113,13 +131,22 @@ export const ContentCard: React.FC<ContentCardProps> = ({
               </h4>
             </div>
 
-            <div className="flex items-center gap-1 shrink-0 text-slate-400">
-              {link && (
+            <div className="flex items-center gap-1 shrink-0 text-slate-400 relative">
+              {copied && (
+                <span
+                  role="status"
+                  className="absolute -top-8 right-0 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-[11px] font-medium text-white shadow-lg z-10"
+                >
+                  Public link copied
+                </span>
+              )}
+              {!isReadOnly && onPublish && (
                 <button
                   type="button"
-                  title={copied ? 'Copied!' : 'Share'}
+                  title={isPublic ? 'Share public link' : 'Publish & share'}
                   onClick={handleShare}
-                  className="p-1 hover:text-brand-600 transition-colors"
+                  disabled={isPublishing}
+                  className="p-1 hover:text-brand-600 transition-colors disabled:opacity-40"
                 >
                   <ExternalLinkIcon className="w-4 h-4" />
                 </button>
@@ -164,8 +191,16 @@ export const ContentCard: React.FC<ContentCardProps> = ({
 
         {/* Footer */}
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-          <span>Added {formatRelativeDate(createdAt)}</span>
-          <span className="capitalize font-medium">{type}</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="truncate">Added {formatRelativeDate(createdAt)}</span>
+            {!isReadOnly && isPublic && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Public
+              </span>
+            )}
+          </div>
+          <span className="capitalize font-medium shrink-0">{type}</span>
         </div>
       </div>
 

@@ -10,6 +10,7 @@ export interface IContent extends Document {
   tags: Types.ObjectId[];
   userId: Types.ObjectId;
   isPinned: boolean;
+  isPublic: boolean;
   metadata?: {
     thumbnail?: string;
     author?: string;
@@ -55,6 +56,11 @@ const contentSchema = new Schema<IContent>(
     isPinned: {
       type: Boolean,
       default: false,
+    },
+    isPublic: {
+      type: Boolean,
+      default: false,
+      index: true, // Speeds up public-brain queries
     },
     metadata: {
       thumbnail: { type: String },

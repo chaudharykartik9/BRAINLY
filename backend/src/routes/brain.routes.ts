@@ -5,7 +5,7 @@ import { ApiResponse } from '../utils/apiResponse.js';
 
 const router = Router();
 
-// Share/Unshare toggle (Private route)
+// Take the whole public page online / offline (Private route)
 router.post('/share', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { isPublic } = req.body;
@@ -16,7 +16,45 @@ router.post('/share', authMiddleware, async (req: Request, res: Response, next: 
   }
 });
 
-// Access public brain by hash (Public route)
+// Publish / unpublish a single content item (Private route)
+router.post('/publish', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { contentId, isPublic } = req.body;
+
+    if (typeof contentId !== 'string' || typeof isPublic !== 'boolean') {
+      return ApiResponse.error(res, 'contentId (string) and isPublic (boolean) are required', 400);
+    }
+
+    const result = await BrainService.setContentVisibility(req.user!.id, contentId, isPublic);
+    if (!result) {
+      return ApiResponse.error(res, 'Content not found or unauthorized', 404);
+    }
+
+    return ApiResponse.success(res, result, 'Content visibility updated');
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Access a single public item by hash + id (Public route)
+router.get(
+  '/:hash/item/:contentId',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { hash, contentId } = req.params;
+      if (typeof hash !== 'string' || typeof contentId !== 'string') {
+        return ApiResponse.error(res, 'Invalid link', 400);
+      }
+
+      const data = await BrainService.getPublicContentItem(hash, contentId);
+      return ApiResponse.success(res, data, 'Public item fetched successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Access a full public brain by hash (Public route)
 router.get(
   '/:hash',
   async (req: Request, res: Response, next: NextFunction) => {

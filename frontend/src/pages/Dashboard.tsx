@@ -53,12 +53,11 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-const handleToggleShare = async (isPublic: boolean): Promise<string | null> => {
+  const handleToggleShare = async (isPublic: boolean): Promise<string | null> => {
     try {
       const res = await brainApi.toggleShare(isPublic);
-      // res.data contains the response payload directly
-      const hash = (res.data as any)?.hash || (res.data as any)?.data?.hash;
-      
+      const hash = res.data?.hash ?? null;
+
       if (hash) {
         const generatedLink = `${window.location.origin}/share/${hash}`;
         setShareLink(generatedLink);
@@ -71,6 +70,20 @@ const handleToggleShare = async (isPublic: boolean): Promise<string | null> => {
       setShareLink(null);
       return null;
     }
+  };
+
+  // Publish / unpublish a single item. Returns its public single-item URL.
+  const handlePublish = async (
+    contentId: string,
+    isPublic: boolean,
+  ): Promise<string | null> => {
+    const res = await brainApi.publish(contentId, isPublic);
+    const { content: updated, hash } = res.data;
+    setContents((prev) => prev.map((c) => (c._id === contentId ? updated : c)));
+    if (hash) {
+      setShareLink(`${window.location.origin}/share/${hash}`);
+    }
+    return hash && isPublic ? `${window.location.origin}/share/${hash}/${contentId}` : null;
   };
 
   const filteredContents = useMemo(() => {
@@ -139,6 +152,7 @@ const handleToggleShare = async (isPublic: boolean): Promise<string | null> => {
                   key={content._id}
                   content={content}
                   onDelete={handleDeleteContent}
+                  onPublish={handlePublish}
                 />
               ))}
             </div>
@@ -177,7 +191,9 @@ const handleToggleShare = async (isPublic: boolean): Promise<string | null> => {
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         onToggleShare={handleToggleShare}
-        initialShareLink={shareLink}
+        shareLink={shareLink}
+        contents={contents}
+        onSetItemVisibility={handlePublish}
       />
     </div>
   );

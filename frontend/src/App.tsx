@@ -5,6 +5,7 @@ import { SigninPage } from './pages/Signin';
 import { SignupPage } from './pages/Signup';
 import { DashboardPage } from './pages/Dashboard';
 import { PublicBrainPage } from './pages/PublicBrain';
+import { PublicContentPage } from './pages/PublicContent';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -67,7 +68,8 @@ export const App: React.FC = () => {
             }
           />
 
-          {/* Shared Public Brain Route */}
+          {/* Shared Public Routes */}
+          <Route path="/share/:hash/:contentId" element={<PublicContentPage />} />
           <Route path="/share/:hash" element={<PublicBrainPage />} />
 
           {/* Fallback Root Redirect */}
