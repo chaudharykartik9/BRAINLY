@@ -14,6 +14,7 @@ export interface IContent {
   tags?: ITag[];
   userId?: string;
   isPublic?: boolean;
+  isPinned?: boolean;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
@@ -26,4 +27,4 @@ export interface CreateContentInput {
   tags?: string[];
 }
 
-export type UpdateContentInput = Partial<CreateContentInput>;
+export type UpdateContentInput = Partial<CreateContentInput> & { isPinned?: boolean };

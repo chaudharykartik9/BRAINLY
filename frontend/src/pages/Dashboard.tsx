@@ -65,6 +65,24 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
+  const handleTogglePin = async (contentId: string, isPinned: boolean) => {
+    const res = await contentApi.update(contentId, { isPinned });
+    setContents((prev) => {
+      const next = prev.map((c) => (c._id === contentId ? res.data : c));
+      // Mirror the backend's { isPinned: -1, createdAt: -1 } sort exactly so
+      // pinning/unpinning reorders correctly without a refetch. Sorting on
+      // isPinned alone isn't enough: relying on stability to preserve
+      // createdAt order breaks once an earlier pin has already reshuffled
+      // the array — unpinning would then "stick" at its pinned position
+      // instead of returning to its chronological spot.
+      return [...next].sort((a, b) => {
+        const pinDiff = Number(!!b.isPinned) - Number(!!a.isPinned);
+        if (pinDiff !== 0) return pinDiff;
+        return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+      });
+    });
+  };
+
   const handleDeleteContent = async (contentId: string) => {
     try {
       await contentApi.delete(contentId);
@@ -175,6 +193,7 @@ export const DashboardPage: React.FC = () => {
                   onDelete={handleDeleteContent}
                   onPublish={handlePublish}
                   onEdit={openEditModal}
+                  onTogglePin={handleTogglePin}
                 />
               ))}
             </div>

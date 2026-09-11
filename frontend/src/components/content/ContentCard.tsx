@@ -3,13 +3,14 @@ import type { IContent } from '../../types/content.types';
 import { Badge } from '../common/Badge';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import { ContentPreview } from './ContentPreview';
-import { DocumentIcon, EditIcon, ExternalLinkIcon, LinkIcon, TrashIcon, TwitterIcon, YoutubeIcon } from '../icons';
+import { DocumentIcon, EditIcon, ExternalLinkIcon, LinkIcon, PinIcon, TrashIcon, TwitterIcon, YoutubeIcon } from '../icons';
 import { formatRelativeDate } from '../../utils/formatters';
 
 interface ContentCardProps {
   content: IContent;
   onDelete?: (id: string) => void;
   onEdit?: (content: IContent) => void;
+  onTogglePin?: (id: string, isPinned: boolean) => Promise<void>;
   /** Publish/unpublish this item; resolves to its public single-item URL (or null). */
   onPublish?: (id: string, isPublic: boolean) => Promise<string | null>;
   isReadOnly?: boolean;
@@ -19,13 +20,15 @@ export const ContentCard: React.FC<ContentCardProps> = ({
   content,
   onDelete,
   onEdit,
+  onTogglePin,
   onPublish,
   isReadOnly = false,
 }) => {
-  const { _id, title, type, link, notes, tags, createdAt, isPublic } = content;
+  const { _id, title, type, link, notes, tags, createdAt, isPublic, isPinned } = content;
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isPinning, setIsPinning] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const renderIcon = () => {
@@ -94,6 +97,17 @@ export const ContentCard: React.FC<ContentCardProps> = ({
     }
   };
 
+  const handleTogglePin = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onTogglePin) return;
+    try {
+      setIsPinning(true);
+      await onTogglePin(_id, !isPinned);
+    } finally {
+      setIsPinning(false);
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (!onDelete) return;
     try {
@@ -141,6 +155,19 @@ export const ContentCard: React.FC<ContentCardProps> = ({
                 >
                   Public link copied
                 </span>
+              )}
+              {!isReadOnly && onTogglePin && (
+                <button
+                  type="button"
+                  title={isPinned ? 'Unpin' : 'Pin to top'}
+                  onClick={handleTogglePin}
+                  disabled={isPinning}
+                  className={`p-1 transition-colors disabled:opacity-40 ${
+                    isPinned ? 'text-amber-500 hover:text-amber-600' : 'hover:text-amber-500'
+                  }`}
+                >
+                  <PinIcon className="w-4 h-4" filled={isPinned} />
+                </button>
               )}
               {!isReadOnly && onPublish && (
                 <button
@@ -208,6 +235,12 @@ export const ContentCard: React.FC<ContentCardProps> = ({
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
           <div className="flex items-center gap-2 min-w-0">
             <span className="truncate">Added {formatRelativeDate(createdAt)}</span>
+            {!isReadOnly && isPinned && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
+                <PinIcon className="h-2.5 w-2.5" filled />
+                Pinned
+              </span>
+            )}
             {!isReadOnly && isPublic && (
               <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />

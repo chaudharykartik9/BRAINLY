@@ -63,6 +63,7 @@ export class ContentService {
       link?: string;
       notes?: string;
       tags?: string[];
+      isPinned?: boolean;
     },
   ) {
     const update: Record<string, unknown> = {};
@@ -70,6 +71,7 @@ export class ContentService {
     if (data.type !== undefined) update.type = data.type;
     if (data.link !== undefined) update.link = data.link;
     if (data.notes !== undefined) update.notes = data.notes;
+    if (data.isPinned !== undefined) update.isPinned = data.isPinned;
     if (data.tags !== undefined) {
       update.tags = await ContentService.resolveTagIds(data.tags);
     }

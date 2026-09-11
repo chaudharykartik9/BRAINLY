@@ -26,6 +26,7 @@ const updateContentSchema = z.object({
     link: z.string().url().optional().or(z.literal('')),
     notes: z.string().optional(),
     tags: z.array(z.string()).optional(),
+    isPinned: z.boolean().optional(),
   }),
 });
 
