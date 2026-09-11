@@ -21,6 +21,26 @@ export class ContentController {
     }
   }
 
+  static async update(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { contentId } = req.params;
+
+      if (!contentId || Array.isArray(contentId)) {
+        return ApiResponse.error(res, 'Invalid content ID', 400);
+      }
+
+      const updated = await ContentService.updateContent(contentId, req.user!.id, req.body);
+
+      if (!updated) {
+        return ApiResponse.error(res, 'Content not found or unauthorized', 404);
+      }
+
+      return ApiResponse.success(res, updated, 'Content updated successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async remove(req: Request, res: Response, next: NextFunction) {
   try {
     const { contentId } = req.params;

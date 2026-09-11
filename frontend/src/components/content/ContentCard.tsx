@@ -3,12 +3,13 @@ import type { IContent } from '../../types/content.types';
 import { Badge } from '../common/Badge';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import { ContentPreview } from './ContentPreview';
-import { DocumentIcon, ExternalLinkIcon, LinkIcon, TrashIcon, TwitterIcon, YoutubeIcon } from '../icons';
+import { DocumentIcon, EditIcon, ExternalLinkIcon, LinkIcon, TrashIcon, TwitterIcon, YoutubeIcon } from '../icons';
 import { formatRelativeDate } from '../../utils/formatters';
 
 interface ContentCardProps {
   content: IContent;
   onDelete?: (id: string) => void;
+  onEdit?: (content: IContent) => void;
   /** Publish/unpublish this item; resolves to its public single-item URL (or null). */
   onPublish?: (id: string, isPublic: boolean) => Promise<string | null>;
   isReadOnly?: boolean;
@@ -17,6 +18,7 @@ interface ContentCardProps {
 export const ContentCard: React.FC<ContentCardProps> = ({
   content,
   onDelete,
+  onEdit,
   onPublish,
   isReadOnly = false,
 }) => {
@@ -149,6 +151,19 @@ export const ContentCard: React.FC<ContentCardProps> = ({
                   className="p-1 hover:text-brand-600 transition-colors disabled:opacity-40"
                 >
                   <ExternalLinkIcon className="w-4 h-4" />
+                </button>
+              )}
+              {!isReadOnly && onEdit && (
+                <button
+                  type="button"
+                  title="Edit"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(content);
+                  }}
+                  className="p-1 hover:text-brand-600 transition-colors"
+                >
+                  <EditIcon className="w-4 h-4" />
                 </button>
               )}
               {!isReadOnly && onDelete && (

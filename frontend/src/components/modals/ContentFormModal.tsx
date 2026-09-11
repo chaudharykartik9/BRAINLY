@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal } from '../common/Modal';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
-import type { ContentType, CreateContentInput } from '../../types/content.types';
+import type { ContentType, CreateContentInput, IContent } from '../../types/content.types';
 
-interface AddContentModalProps {
+interface ContentFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreateContentInput) => Promise<void>;
+  /** When set, the modal edits this item instead of creating a new one. */
+  editingContent?: IContent | null;
 }
 
 const contentTypes: { label: string; value: ContentType }[] = [
@@ -17,11 +19,14 @@ const contentTypes: { label: string; value: ContentType }[] = [
   { label: 'Link', value: 'link' },
 ];
 
-export const AddContentModal: React.FC<AddContentModalProps> = ({
+export const ContentFormModal: React.FC<ContentFormModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  editingContent = null,
 }) => {
+  const isEditing = !!editingContent;
+
   const [title, setTitle] = useState('');
   const [type, setType] = useState<ContentType>('youtube');
   const [link, setLink] = useState('');
@@ -38,6 +43,24 @@ export const AddContentModal: React.FC<AddContentModalProps> = ({
     setTagsInput('');
     setError(null);
   };
+
+  // Populate the form from the item being edited (or reset it for a fresh
+  // "Add Content" open) each time the modal is opened.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (editingContent) {
+      setTitle(editingContent.title);
+      setType(editingContent.type);
+      setLink(editingContent.link ?? '');
+      setNotes(editingContent.notes ?? '');
+      setTagsInput((editingContent.tags ?? []).map((t) => t.title).join(', '));
+      setError(null);
+    } else {
+      resetForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, editingContent]);
 
   const handleClose = () => {
     resetForm();
@@ -69,7 +92,7 @@ export const AddContentModal: React.FC<AddContentModalProps> = ({
       handleClose();
     } catch (err: unknown) {
       const errorMsg =
-        err instanceof Error ? err.message : 'Failed to create content';
+        err instanceof Error ? err.message : `Failed to ${isEditing ? 'update' : 'create'} content`;
       setError(errorMsg);
     } finally {
       setLoading(false);
@@ -77,7 +100,7 @@ export const AddContentModal: React.FC<AddContentModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Add New Content">
+    <Modal isOpen={isOpen} onClose={handleClose} title={isEditing ? 'Edit Content' : 'Add New Content'}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="p-3 text-xs font-medium text-red-600 bg-red-50 rounded-xl border border-red-100">
@@ -148,7 +171,13 @@ export const AddContentModal: React.FC<AddContentModalProps> = ({
             Cancel
           </Button>
           <Button variant="primary" type="submit" disabled={loading}>
-            {loading ? 'Adding...' : 'Add Content'}
+            {loading
+              ? isEditing
+                ? 'Saving...'
+                : 'Adding...'
+              : isEditing
+                ? 'Save Changes'
+                : 'Add Content'}
           </Button>
         </div>
       </form>

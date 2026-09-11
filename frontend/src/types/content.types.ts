@@ -25,3 +25,5 @@ export interface CreateContentInput {
   notes?: string;
   tags?: string[];
 }
+
+export type UpdateContentInput = Partial<CreateContentInput>;

@@ -18,12 +18,24 @@ const createContentSchema = z.object({
   }),
 });
 
+// Same shape as create, but every field is optional — only what's sent gets changed
+const updateContentSchema = z.object({
+  body: z.object({
+    title: z.string().min(1, 'Title is required').optional(),
+    type: z.enum(['twitter', 'youtube', 'article', 'link', 'document', 'thought']).optional(),
+    link: z.string().url().optional().or(z.literal('')),
+    notes: z.string().optional(),
+    tags: z.array(z.string()).optional(),
+  }),
+});
+
 // Protect all content routes with login check
 router.use(authMiddleware);
 
 // Routes
 router.post('/', validate(createContentSchema), ContentController.create);
 router.get('/', ContentController.getAll);
+router.patch('/:contentId', validate(updateContentSchema), ContentController.update);
 router.delete('/:contentId', ContentController.remove);
 
 export default router;

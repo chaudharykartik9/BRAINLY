@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Navbar } from '../components/layout/Navbar';
 import { ContentCard } from '../components/content/ContentCard';
-import { AddContentModal } from '../components/modals/AddContentModal';
+import { ContentFormModal } from '../components/modals/ContentFormModal';
 import { ShareBrainModal } from '../components/modals/ShareBrainModal';
 import { Button } from '../components/common/Button';
 import { PlusIcon } from '../components/icons';
@@ -16,8 +16,9 @@ export const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedType, setSelectedType] = useState<ContentType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  
+
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+  const [editingContent, setEditingContent] = useState<IContent | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
 
@@ -39,9 +40,29 @@ export const DashboardPage: React.FC = () => {
     fetchContents();
   }, []);
 
-  const handleAddContent = async (input: CreateContentInput) => {
-    const res = await contentApi.create(input);
-    setContents((prev) => [res.data, ...prev]);
+  const openAddModal = () => {
+    setEditingContent(null);
+    setIsAddModalOpen(true);
+  };
+
+  const openEditModal = (content: IContent) => {
+    setEditingContent(content);
+    setIsAddModalOpen(true);
+  };
+
+  const closeContentModal = () => {
+    setIsAddModalOpen(false);
+    setEditingContent(null);
+  };
+
+  const handleSubmitContent = async (input: CreateContentInput) => {
+    if (editingContent) {
+      const res = await contentApi.update(editingContent._id, input);
+      setContents((prev) => prev.map((c) => (c._id === editingContent._id ? res.data : c)));
+    } else {
+      const res = await contentApi.create(input);
+      setContents((prev) => [res.data, ...prev]);
+    }
   };
 
   const handleDeleteContent = async (contentId: string) => {
@@ -110,7 +131,7 @@ export const DashboardPage: React.FC = () => {
         <Navbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          onAddContent={() => setIsAddModalOpen(true)}
+          onAddContent={openAddModal}
           onShareBrain={() => setIsShareModalOpen(true)}
         />
 
@@ -129,7 +150,7 @@ export const DashboardPage: React.FC = () => {
               variant="primary"
               size="md"
               icon={<PlusIcon />}
-              onClick={() => setIsAddModalOpen(true)}
+              onClick={openAddModal}
             >
               Add Content
             </Button>
@@ -153,6 +174,7 @@ export const DashboardPage: React.FC = () => {
                   content={content}
                   onDelete={handleDeleteContent}
                   onPublish={handlePublish}
+                  onEdit={openEditModal}
                 />
               ))}
             </div>
@@ -170,7 +192,7 @@ export const DashboardPage: React.FC = () => {
                   size="md"
                   icon={<PlusIcon />}
                   className="mt-6"
-                  onClick={() => setIsAddModalOpen(true)}
+                  onClick={openAddModal}
                 >
                   Add Your First Item
                 </Button>
@@ -181,10 +203,11 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Modals */}
-      <AddContentModal
+      <ContentFormModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleAddContent}
+        onClose={closeContentModal}
+        onSubmit={handleSubmitContent}
+        editingContent={editingContent}
       />
 
       <ShareBrainModal
