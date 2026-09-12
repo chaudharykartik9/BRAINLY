@@ -172,6 +172,15 @@ export const SigninPage: React.FC = () => {
             required
           />
 
+          <div className="flex justify-end -mt-2">
+            <Link
+              to="/forgot-password"
+              className="text-xs font-semibold text-brand-600 hover:text-brand-700 underline-offset-2 hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+
           <Button
             type="submit"
             variant="primary"

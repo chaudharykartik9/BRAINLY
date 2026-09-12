@@ -20,7 +20,22 @@ const signinSchema = z.object({
   }),
 });
 
+const forgotPasswordSchema = z.object({
+  body: z.object({
+    email: z.string().email(),
+  }),
+});
+
+const resetPasswordSchema = z.object({
+  body: z.object({
+    token: z.string().min(1, 'Reset token is required'),
+    password: z.string().min(6),
+  }),
+});
+
 router.post('/signup', validate(signupSchema), AuthController.signup);
 router.post('/signin', validate(signinSchema), AuthController.signin);
+router.post('/forgot-password', validate(forgotPasswordSchema), AuthController.forgotPassword);
+router.post('/reset-password', validate(resetPasswordSchema), AuthController.resetPassword);
 
 export default router;

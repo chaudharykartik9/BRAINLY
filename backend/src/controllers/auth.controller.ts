@@ -22,4 +22,30 @@ export class AuthController {
       next(error);
     }
   }
+
+  static async forgotPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body;
+      await AuthService.forgotPassword(email);
+      // Same response whether or not the email is registered, so this
+      // endpoint can't be used to enumerate accounts.
+      return ApiResponse.success(
+        res,
+        null,
+        'If an account exists for that email, a reset link has been sent.',
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token, password } = req.body;
+      const data = await AuthService.resetPassword(token, password);
+      return ApiResponse.success(res, data, 'Password reset successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
 }

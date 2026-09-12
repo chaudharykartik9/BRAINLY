@@ -5,6 +5,8 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   avatarUrl?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,6 +35,14 @@ const userSchema = new Schema<IUser>(
     avatarUrl: {
       type: String,
       default: '',
+    },
+    resetPasswordToken: {
+      type: String,
+      select: false, // Only a hash of the token is stored, but keep it out of default queries anyway
+    },
+    resetPasswordExpires: {
+      type: Date,
+      select: false,
     },
   },
   { timestamps: true }

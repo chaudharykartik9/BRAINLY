@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SigninPage } from './pages/Signin';
 import { SignupPage } from './pages/Signup';
+import { ForgotPasswordPage } from './pages/ForgotPassword';
+import { ResetPasswordPage } from './pages/ResetPassword';
 import { DashboardPage } from './pages/Dashboard';
 import { PublicBrainPage } from './pages/PublicBrain';
 import { PublicContentPage } from './pages/PublicContent';
@@ -57,6 +59,17 @@ export const App: React.FC = () => {
               </PublicOnlyRoute>
             }
           />
+          <Route
+            path="/forgot-password"
+            element={
+              <PublicOnlyRoute>
+                <ForgotPasswordPage />
+              </PublicOnlyRoute>
+            }
+          />
+          {/* Not gated by PublicOnlyRoute: a reset link must work even if
+              this browser still has an old/stale session logged in. */}
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
           {/* Protected App Workspace */}
           <Route
