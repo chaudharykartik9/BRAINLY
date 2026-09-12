@@ -218,19 +218,47 @@ const DocumentPreview: React.FC<{ content: IContent }> = ({ content }) => {
 };
 
 const LinkPreview: React.FC<{ content: IContent }> = ({ content }) => {
-  const { link, notes, title } = content;
+  const { link, notes, title, metadata } = content;
   const domain = getUrlDomain(link);
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+
+  if (metadata?.thumbnail && !thumbnailFailed) {
+    return (
+      <div className="w-full rounded-xl overflow-hidden border border-slate-100 bg-slate-50">
+        <img
+          src={metadata.thumbnail}
+          alt=""
+          className="w-full h-32 object-cover"
+          onError={() => setThumbnailFailed(true)}
+        />
+        <div className="p-3 flex flex-col gap-1">
+          <div className="flex items-center gap-1.5 text-brand-600 min-w-0">
+            <LinkIcon className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-xs font-semibold text-slate-500 truncate">
+              {metadata.author || domain}
+            </span>
+          </div>
+          <p className="text-sm font-medium text-slate-700 line-clamp-1">{title}</p>
+          {(notes || metadata.description) && (
+            <p className="text-xs text-slate-500 line-clamp-2">{notes || metadata.description}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <PreviewShell className="items-start bg-gradient-to-br from-slate-50 to-brand-50/40">
       <div className="flex items-center gap-2 text-brand-600 min-w-0 w-full">
         <LinkIcon className="w-5 h-5 shrink-0" />
         <span className="text-xs font-semibold text-slate-500 truncate">
-          {domain || 'Personal note'}
+          {metadata?.author || domain || 'Personal note'}
         </span>
       </div>
-      {notes ? (
-        <p className="text-sm text-slate-600 leading-relaxed line-clamp-3">{notes}</p>
+      {notes || metadata?.description ? (
+        <p className="text-sm text-slate-600 leading-relaxed line-clamp-3">
+          {notes || metadata?.description}
+        </p>
       ) : (
         <p className="text-sm text-slate-500 font-medium line-clamp-1">{title}</p>
       )}

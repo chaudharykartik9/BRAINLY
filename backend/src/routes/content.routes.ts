@@ -30,13 +30,21 @@ const updateContentSchema = z.object({
   }),
 });
 
+const bulkDeleteSchema = z.object({
+  body: z.object({
+    ids: z.array(z.string()).min(1, 'At least one id is required'),
+  }),
+});
+
 // Protect all content routes with login check
 router.use(authMiddleware);
 
 // Routes
 router.post('/', validate(createContentSchema), ContentController.create);
 router.get('/', ContentController.getAll);
+router.get('/tags', ContentController.getTags);
 router.patch('/:contentId', validate(updateContentSchema), ContentController.update);
+router.delete('/', validate(bulkDeleteSchema), ContentController.removeMany);
 router.delete('/:contentId', ContentController.remove);
 
 export default router;

@@ -54,6 +54,12 @@ export const TrashIcon: React.FC<IconProps> = ({ className = 'w-4 h-4' }) => (
   </svg>
 );
 
+export const MenuIcon: React.FC<IconProps> = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+);
+
 export const CrossIcon: React.FC<IconProps> = ({ className = 'w-4 h-4' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M18 6 6 18M6 6l12 12" />

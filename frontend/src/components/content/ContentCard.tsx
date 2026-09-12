@@ -5,6 +5,7 @@ import { ConfirmDialog } from '../common/ConfirmDialog';
 import { ContentPreview } from './ContentPreview';
 import { DocumentIcon, EditIcon, ExternalLinkIcon, LinkIcon, PinIcon, TrashIcon, TwitterIcon, YoutubeIcon } from '../icons';
 import { formatRelativeDate } from '../../utils/formatters';
+import { useToast } from '../../context/ToastContext';
 
 interface ContentCardProps {
   content: IContent;
@@ -13,7 +14,11 @@ interface ContentCardProps {
   onTogglePin?: (id: string, isPinned: boolean) => Promise<void>;
   /** Publish/unpublish this item; resolves to its public single-item URL (or null). */
   onPublish?: (id: string, isPublic: boolean) => Promise<string | null>;
+  onTagClick?: (tagTitle: string) => void;
   isReadOnly?: boolean;
+  isSelectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 export const ContentCard: React.FC<ContentCardProps> = ({
@@ -22,14 +27,18 @@ export const ContentCard: React.FC<ContentCardProps> = ({
   onEdit,
   onTogglePin,
   onPublish,
+  onTagClick,
   isReadOnly = false,
+  isSelectionMode = false,
+  isSelected = false,
+  onToggleSelect,
 }) => {
   const { _id, title, type, link, notes, tags, createdAt, isPublic, isPinned } = content;
+  const { showToast } = useToast();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPinning, setIsPinning] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const renderIcon = () => {
     switch (type) {
@@ -45,11 +54,16 @@ export const ContentCard: React.FC<ContentCardProps> = ({
     }
   };
 
-  // Clicking anywhere on the card opens the saved URL directly.
-  const isClickable = !isReadOnly && !!link;
+  // Clicking anywhere on the card opens the saved URL directly — unless
+  // selection mode is active, in which case it toggles selection instead.
+  const isClickable = !isReadOnly && (isSelectionMode || !!link);
 
-  const openLink = () => {
-    if (!isClickable) return;
+  const handleCardClick = () => {
+    if (isSelectionMode) {
+      onToggleSelect?.(_id);
+      return;
+    }
+    if (!link) return;
     window.open(link, '_blank', 'noopener,noreferrer');
   };
 
@@ -57,7 +71,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
     if (!isClickable) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      openLink();
+      handleCardClick();
     }
   };
 
@@ -90,8 +104,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
     try {
       if (!navigator.clipboard) return;
       await navigator.clipboard.writeText(publicUrl);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
+      showToast('Public link copied');
     } catch {
       // Clipboard write denied — fail silently rather than show a false success.
     }
@@ -126,87 +139,92 @@ export const ContentCard: React.FC<ContentCardProps> = ({
   return (
     <>
       <div
-        className={`bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between group ${
-          isClickable ? 'cursor-pointer' : ''
-        }`}
-        onClick={openLink}
+        className={`bg-white rounded-2xl border p-5 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between group ${
+          isSelected ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200/80'
+        } ${isClickable ? 'cursor-pointer' : ''}`}
+        onClick={handleCardClick}
         onKeyDown={handleCardKeyDown}
         role={isClickable ? 'button' : undefined}
         tabIndex={isClickable ? 0 : undefined}
-        title={isClickable ? 'Open page' : undefined}
+        title={isSelectionMode ? undefined : isClickable ? 'Open page' : undefined}
       >
         <div>
           {/* Header */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="p-1.5 rounded-lg bg-slate-50 border border-slate-100 shrink-0">
-                {renderIcon()}
-              </span>
+              {isSelectionMode ? (
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => onToggleSelect?.(_id)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-4 h-4 shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500/30"
+                  aria-label={`Select ${title}`}
+                />
+              ) : (
+                <span className="p-1.5 rounded-lg bg-slate-50 border border-slate-100 shrink-0">
+                  {renderIcon()}
+                </span>
+              )}
               <h4 className="font-semibold text-slate-800 line-clamp-1 text-sm tracking-tight">
                 {title}
               </h4>
             </div>
 
-            <div className="flex items-center gap-1 shrink-0 text-slate-400 relative">
-              {copied && (
-                <span
-                  role="status"
-                  className="absolute -top-8 right-0 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-[11px] font-medium text-white shadow-lg z-10"
-                >
-                  Public link copied
-                </span>
-              )}
-              {!isReadOnly && onTogglePin && (
-                <button
-                  type="button"
-                  title={isPinned ? 'Unpin' : 'Pin to top'}
-                  onClick={handleTogglePin}
-                  disabled={isPinning}
-                  className={`p-1 transition-colors disabled:opacity-40 ${
-                    isPinned ? 'text-amber-500 hover:text-amber-600' : 'hover:text-amber-500'
-                  }`}
-                >
-                  <PinIcon className="w-4 h-4" filled={isPinned} />
-                </button>
-              )}
-              {!isReadOnly && onPublish && (
-                <button
-                  type="button"
-                  title={isPublic ? 'Share public link' : 'Publish & share'}
-                  onClick={handleShare}
-                  disabled={isPublishing}
-                  className="p-1 hover:text-brand-600 transition-colors disabled:opacity-40"
-                >
-                  <ExternalLinkIcon className="w-4 h-4" />
-                </button>
-              )}
-              {!isReadOnly && onEdit && (
-                <button
-                  type="button"
-                  title="Edit"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(content);
-                  }}
-                  className="p-1 hover:text-brand-600 transition-colors"
-                >
-                  <EditIcon className="w-4 h-4" />
-                </button>
-              )}
-              {!isReadOnly && onDelete && (
-                <button
-                  type="button"
-                  title="Delete"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsConfirmOpen(true);
-                  }}
-                  className="p-1 hover:text-red-600 transition-colors"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+            {!isSelectionMode && (
+              <div className="flex items-center gap-1 shrink-0 text-slate-400">
+                {!isReadOnly && onTogglePin && (
+                  <button
+                    type="button"
+                    title={isPinned ? 'Unpin' : 'Pin to top'}
+                    onClick={handleTogglePin}
+                    disabled={isPinning}
+                    className={`p-1 transition-colors disabled:opacity-40 ${
+                      isPinned ? 'text-amber-500 hover:text-amber-600' : 'hover:text-amber-500'
+                    }`}
+                  >
+                    <PinIcon className="w-4 h-4" filled={isPinned} />
+                  </button>
+                )}
+                {!isReadOnly && onPublish && (
+                  <button
+                    type="button"
+                    title={isPublic ? 'Share public link' : 'Publish & share'}
+                    onClick={handleShare}
+                    disabled={isPublishing}
+                    className="p-1 hover:text-brand-600 transition-colors disabled:opacity-40"
+                  >
+                    <ExternalLinkIcon className="w-4 h-4" />
+                  </button>
+                )}
+                {!isReadOnly && onEdit && (
+                  <button
+                    type="button"
+                    title="Edit"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(content);
+                    }}
+                    className="p-1 hover:text-brand-600 transition-colors"
+                  >
+                    <EditIcon className="w-4 h-4" />
+                  </button>
+                )}
+                {!isReadOnly && onDelete && (
+                  <button
+                    type="button"
+                    title="Delete"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsConfirmOpen(true);
+                    }}
+                    className="p-1 hover:text-red-600 transition-colors"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Preview */}
@@ -222,11 +240,24 @@ export const ContentCard: React.FC<ContentCardProps> = ({
           {/* Tags */}
           {tags && tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-4">
-              {tags.map((tag) => (
-                <Badge key={tag._id} variant="primary">
-                  {tag.title}
-                </Badge>
-              ))}
+              {tags.map((tag) =>
+                onTagClick ? (
+                  <Badge
+                    key={tag._id}
+                    variant="primary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTagClick(tag.title);
+                    }}
+                  >
+                    {tag.title}
+                  </Badge>
+                ) : (
+                  <Badge key={tag._id} variant="primary">
+                    {tag.title}
+                  </Badge>
+                ),
+              )}
             </div>
           )}
         </div>

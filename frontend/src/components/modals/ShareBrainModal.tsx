@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { DocumentIcon, LinkIcon, TwitterIcon, YoutubeIcon } from '../icons';
+import { contentApi } from '../../services/content.api';
 import type { IContent } from '../../types/content.types';
 
 interface ShareBrainModalProps {
@@ -9,7 +10,6 @@ interface ShareBrainModalProps {
   onClose: () => void;
   onToggleShare: (isPublic: boolean) => Promise<string | null>;
   shareLink: string | null;
-  contents: IContent[];
   onSetItemVisibility: (contentId: string, isPublic: boolean) => Promise<string | null>;
 }
 
@@ -52,15 +52,41 @@ export const ShareBrainModal: React.FC<ShareBrainModalProps> = ({
   onClose,
   onToggleShare,
   shareLink,
-  contents,
   onSetItemVisibility,
 }) => {
   const [masterLoading, setMasterLoading] = useState(false);
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
 
+  // Owns its own full (unpaginated) list of the user's content — the main
+  // dashboard grid only ever holds one page, which isn't enough to let the
+  // user pick from their whole collection here.
+  const [items, setItems] = useState<IContent[]>([]);
+  const [itemsLoading, setItemsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setItemsLoading(true);
+        const res = await contentApi.getAll({ limit: 1000 });
+        if (!cancelled) setItems(res.data.items);
+      } catch {
+        if (!cancelled) setItems([]);
+      } finally {
+        if (!cancelled) setItemsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
   const isPublic = !!shareLink;
-  const publicCount = contents.filter((c) => c.isPublic).length;
+  const publicCount = items.filter((c) => c.isPublic).length;
 
   const handleMasterToggle = async () => {
     try {
@@ -75,6 +101,9 @@ export const ShareBrainModal: React.FC<ShareBrainModalProps> = ({
     setBusyIds((prev) => new Set(prev).add(item._id));
     try {
       await onSetItemVisibility(item._id, !item.isPublic);
+      setItems((prev) =>
+        prev.map((c) => (c._id === item._id ? { ...c, isPublic: !item.isPublic } : c)),
+      );
     } finally {
       setBusyIds((prev) => {
         const next = new Set(prev);
@@ -132,18 +161,22 @@ export const ShareBrainModal: React.FC<ShareBrainModalProps> = ({
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Select what to share
               </label>
-              <span className="text-xs font-medium text-slate-400">
-                {publicCount} of {contents.length} shared
-              </span>
+              {!itemsLoading && (
+                <span className="text-xs font-medium text-slate-400">
+                  {publicCount} of {items.length} shared
+                </span>
+              )}
             </div>
 
-            {contents.length === 0 ? (
+            {itemsLoading ? (
+              <div className="h-32 rounded-xl border border-slate-100 bg-slate-50 animate-pulse" />
+            ) : items.length === 0 ? (
               <p className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-4 text-center text-xs text-slate-400">
                 You haven't saved any content yet.
               </p>
             ) : (
               <div className="max-h-64 space-y-1 overflow-y-auto rounded-xl border border-slate-100 p-1.5">
-                {contents.map((item) => (
+                {items.map((item) => (
                   <div
                     key={item._id}
                     className="flex items-center justify-between gap-3 rounded-lg px-2.5 py-2 hover:bg-slate-50"

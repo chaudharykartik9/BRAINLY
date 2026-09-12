@@ -5,6 +5,12 @@ export interface ITag {
   title: string;
 }
 
+export interface IContentMetadata {
+  thumbnail?: string;
+  author?: string;
+  description?: string;
+}
+
 export interface IContent {
   _id: string;
   title: string;
@@ -15,8 +21,30 @@ export interface IContent {
   userId?: string;
   isPublic?: boolean;
   isPinned?: boolean;
+  metadata?: IContentMetadata;
   createdAt?: string | Date;
   updatedAt?: string | Date;
+}
+
+export interface TagCount {
+  title: string;
+  count: number;
+}
+
+export interface PaginatedContent {
+  items: IContent[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export interface GetContentParams {
+  page?: number;
+  limit?: number;
+  type?: ContentType;
+  tag?: string;
+  search?: string;
 }
 
 export interface CreateContentInput {
