@@ -4,6 +4,7 @@ import { Input } from '../common/Input';
 import { Button } from '../common/Button';
 import { TagInput } from '../common/TagInput';
 import { ConfirmDialog } from '../common/ConfirmDialog';
+import { extractErrorMessage } from '../../utils/apiError';
 import type { ContentType, CreateContentInput, IContent } from '../../types/content.types';
 
 interface ContentFormModalProps {
@@ -137,9 +138,7 @@ export const ContentFormModal: React.FC<ContentFormModalProps> = ({
       });
       handleClose();
     } catch (err: unknown) {
-      const errorMsg =
-        err instanceof Error ? err.message : `Failed to ${isEditing ? 'update' : 'create'} content`;
-      setError(errorMsg);
+      setError(extractErrorMessage(err, `Failed to ${isEditing ? 'update' : 'create'} content`));
     } finally {
       setLoading(false);
     }

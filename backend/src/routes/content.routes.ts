@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ContentController } from '../controllers/content.controller.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.js';
+import { contentWriteLimiter } from '../middlewares/rateLimit.js';
 
 const router = Router();
 
@@ -40,10 +41,15 @@ const bulkDeleteSchema = z.object({
 router.use(authMiddleware);
 
 // Routes
-router.post('/', validate(createContentSchema), ContentController.create);
+router.post('/', contentWriteLimiter, validate(createContentSchema), ContentController.create);
 router.get('/', ContentController.getAll);
 router.get('/tags', ContentController.getTags);
-router.patch('/:contentId', validate(updateContentSchema), ContentController.update);
+router.patch(
+  '/:contentId',
+  contentWriteLimiter,
+  validate(updateContentSchema),
+  ContentController.update,
+);
 router.delete('/', validate(bulkDeleteSchema), ContentController.removeMany);
 router.delete('/:contentId', ContentController.remove);
 

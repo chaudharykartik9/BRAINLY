@@ -6,6 +6,7 @@ import { ContentPreview } from './ContentPreview';
 import { DocumentIcon, EditIcon, ExternalLinkIcon, LinkIcon, PinIcon, TrashIcon, TwitterIcon, YoutubeIcon } from '../icons';
 import { formatRelativeDate } from '../../utils/formatters';
 import { useToast } from '../../context/ToastContext';
+import { extractErrorMessage } from '../../utils/apiError';
 
 interface ContentCardProps {
   content: IContent;
@@ -85,8 +86,9 @@ export const ContentCard: React.FC<ContentCardProps> = ({
     try {
       setIsPublishing(true);
       publicUrl = await onPublish(_id, true);
-    } catch {
-      return; // publish failed — leave the card as-is
+    } catch (err) {
+      showToast(extractErrorMessage(err, 'Failed to publish this item'), 'error');
+      return;
     } finally {
       setIsPublishing(false);
     }
@@ -116,6 +118,8 @@ export const ContentCard: React.FC<ContentCardProps> = ({
     try {
       setIsPinning(true);
       await onTogglePin(_id, !isPinned);
+    } catch (err) {
+      showToast(extractErrorMessage(err, 'Failed to update pin status'), 'error');
     } finally {
       setIsPinning(false);
     }

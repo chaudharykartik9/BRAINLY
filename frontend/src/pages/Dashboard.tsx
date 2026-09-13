@@ -10,6 +10,7 @@ import { PlusIcon, TrashIcon } from '../components/icons';
 import { contentApi } from '../services/content.api';
 import { brainApi } from '../services/brain.api';
 import { useToast } from '../context/ToastContext';
+import { extractErrorMessage } from '../utils/apiError';
 import type { ContentType, CreateContentInput, IContent, TagCount } from '../types/content.types';
 import { useDebounce } from '../hooks/useDebounce';
 
@@ -66,12 +67,13 @@ export const DashboardPage: React.FC = () => {
         setPage(pageToLoad);
       } catch (err) {
         console.error('Failed to fetch contents:', err);
+        showToast(extractErrorMessage(err, 'Failed to load your content'), 'error');
       } finally {
         setLoading(false);
         setLoadingMore(false);
       }
     },
-    [selectedType, selectedTag, debouncedSearch],
+    [selectedType, selectedTag, debouncedSearch, showToast],
   );
 
   const fetchTags = useCallback(async () => {
@@ -80,8 +82,9 @@ export const DashboardPage: React.FC = () => {
       setTags(res.data);
     } catch (err) {
       console.error('Failed to fetch tags:', err);
+      showToast(extractErrorMessage(err, 'Failed to load tags'), 'error');
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchContents(1, true);
@@ -159,7 +162,7 @@ export const DashboardPage: React.FC = () => {
       await Promise.all([fetchContents(1, true), fetchTags()]);
     } catch (err) {
       console.error('Failed to delete content:', err);
-      showToast('Failed to delete content', 'error');
+      showToast(extractErrorMessage(err, 'Failed to delete content'), 'error');
     }
   };
 
@@ -177,6 +180,7 @@ export const DashboardPage: React.FC = () => {
       return null;
     } catch (err) {
       console.error('Failed to toggle brain sharing:', err);
+      showToast(extractErrorMessage(err, 'Failed to update sharing settings'), 'error');
       setShareLink(null);
       return null;
     }
@@ -229,7 +233,7 @@ export const DashboardPage: React.FC = () => {
       await Promise.all([fetchContents(1, true), fetchTags()]);
     } catch (err) {
       console.error('Bulk delete failed:', err);
-      showToast('Failed to delete selected items', 'error');
+      showToast(extractErrorMessage(err, 'Failed to delete selected items'), 'error');
     } finally {
       setBulkActionLoading(false);
     }

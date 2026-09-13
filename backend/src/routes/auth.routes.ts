@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { AuthController } from '../controllers/auth.controller.js';
 import { validate } from '../middlewares/validate.js';
+import { signinLimiter, signupLimiter, forgotPasswordLimiter } from '../middlewares/rateLimit.js';
 
 const router = Router();
 
@@ -33,9 +34,14 @@ const resetPasswordSchema = z.object({
   }),
 });
 
-router.post('/signup', validate(signupSchema), AuthController.signup);
-router.post('/signin', validate(signinSchema), AuthController.signin);
-router.post('/forgot-password', validate(forgotPasswordSchema), AuthController.forgotPassword);
+router.post('/signup', signupLimiter, validate(signupSchema), AuthController.signup);
+router.post('/signin', signinLimiter, validate(signinSchema), AuthController.signin);
+router.post(
+  '/forgot-password',
+  forgotPasswordLimiter,
+  validate(forgotPasswordSchema),
+  AuthController.forgotPassword,
+);
 router.post('/reset-password', validate(resetPasswordSchema), AuthController.resetPassword);
 
 export default router;
