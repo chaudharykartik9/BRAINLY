@@ -4,6 +4,7 @@ import { Button } from '../common/Button';
 import { DocumentIcon, LinkIcon, TwitterIcon, YoutubeIcon } from '../icons';
 import { contentApi } from '../../services/content.api';
 import type { IContent } from '../../types/content.types';
+import { Skeleton } from '../common/Skeleton';
 
 interface ShareBrainModalProps {
   isOpen: boolean;
@@ -169,7 +170,7 @@ export const ShareBrainModal: React.FC<ShareBrainModalProps> = ({
             </div>
 
             {itemsLoading ? (
-              <div className="h-32 rounded-xl border border-slate-100 bg-slate-50 animate-pulse" />
+              <Skeleton className="h-32 rounded-xl border border-slate-100 bg-slate-50" />
             ) : items.length === 0 ? (
               <p className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-4 text-center text-xs text-slate-400">
                 You haven't saved any content yet.

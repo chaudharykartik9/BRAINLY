@@ -5,6 +5,7 @@ import type { PublicContentData } from '../types/brain.types';
 import { ContentCard } from '../components/content/ContentCard';
 import { LogoIcon } from '../components/icons';
 import { Button } from '../components/common/Button';
+import { Skeleton } from '../components/common/Skeleton';
 
 export const PublicContentPage: React.FC = () => {
   const { hash, contentId } = useParams<{ hash: string; contentId: string }>();
@@ -59,7 +60,7 @@ export const PublicContentPage: React.FC = () => {
 
       <main className="p-8 max-w-2xl w-full mx-auto flex-1">
         {loading ? (
-          <div className="h-72 bg-slate-200/60 rounded-2xl animate-pulse" />
+          <Skeleton className="h-72 rounded-2xl bg-slate-200/60" />
         ) : error || !data ? (
           <div className="text-center py-24 bg-white rounded-3xl border border-slate-200/80 p-8 shadow-xs mt-8">
             <h3 className="text-xl font-bold text-slate-800 tracking-tight">Item Unavailable</h3>

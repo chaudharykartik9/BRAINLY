@@ -13,6 +13,7 @@ import { useToast } from '../context/ToastContext';
 import { extractErrorMessage } from '../utils/apiError';
 import type { ContentType, CreateContentInput, IContent, TagCount } from '../types/content.types';
 import { useDebounce } from '../hooks/useDebounce';
+import { CardGridSkeleton } from '../components/common/Skeleton';
 
 const PAGE_SIZE = 24;
 
@@ -392,11 +393,7 @@ export const DashboardPage: React.FC = () => {
 
           {/* Cards Grid / Empty State */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <div key={n} className="h-64 bg-slate-200/60 rounded-2xl animate-pulse" />
-              ))}
-            </div>
+            <CardGridSkeleton count={6} />
           ) : contents.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

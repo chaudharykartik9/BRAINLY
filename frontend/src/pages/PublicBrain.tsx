@@ -5,6 +5,7 @@ import type  { PublicBrainData } from '../types/brain.types';
 import { ContentCard } from '../components/content/ContentCard';
 import { LogoIcon } from '../components/icons';
 import { Button } from '../components/common/Button';
+import { Skeleton, CardGridSkeleton } from '../components/common/Skeleton';
 
 export const PublicBrainPage: React.FC = () => {
   const { hash } = useParams<{ hash: string }>();
@@ -61,12 +62,8 @@ export const PublicBrainPage: React.FC = () => {
       <main className="p-8 max-w-7xl w-full mx-auto flex-1">
         {loading ? (
           <div>
-            <div className="h-10 w-64 bg-slate-200/70 rounded-xl mb-8 animate-pulse" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <div key={n} className="h-64 bg-slate-200/60 rounded-2xl animate-pulse" />
-              ))}
-            </div>
+            <Skeleton className="h-10 w-64 rounded-xl mb-8 bg-slate-200/70" />
+            <CardGridSkeleton count={6} />
           </div>
         ) : error ? (
           <div className="text-center py-24 bg-white rounded-3xl border border-slate-200/80 p-8 shadow-xs max-w-lg mx-auto mt-12">
