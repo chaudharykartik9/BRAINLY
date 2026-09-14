@@ -4,19 +4,22 @@ A personal knowledge-management app. Save links, tweets, videos, documents, and 
 
 ## Features
 
-- **Save & organize** — links, tweets, YouTube videos, documents, and freeform notes, each with tags, optional notes, and a type-specific preview card.
-- **Edit in place** — update an item's title, type, link, notes, or tags after the fact; no create-only limitation.
+- **Save & organize** — links, tweets, YouTube videos, documents, and freeform notes, each with tags, optional notes, and a type-specific preview card. Saving a link auto-fetches a title/description/image preview server-side, with SSRF protection against private/internal addresses.
+- **Edit in place** — update an item's title, type, link, notes, or tags after the fact; no create-only limitation. Unsaved edits prompt a discard-confirmation before they're lost.
 - **Pin to top** — pin your most important items so they always sort first.
 - **Selective public sharing** — turn on a public page for your account, then choose exactly which items appear on it (per-item toggle, not all-or-nothing). Each published item also gets its own standalone public URL.
-- **Search & filter** — client-side search across title/notes/tags, plus filtering by content type.
+- **Search, filter & pagination** — server-side search across title/notes/tags, filtering by content type or tag (click-to-filter tag pills, with per-tag counts), and paginated results instead of loading everything at once.
+- **Bulk actions** — multi-select items to pin, unpin, publish, unpublish, or delete them together.
 - **Auth with password reset** — email/password signup and signin (JWT-based), plus a full forgot-password → emailed reset link → new-password flow. In local development, if no SMTP is configured, reset links are logged to the backend console instead of emailed, so the flow works out of the box with zero email setup.
+- **Rate limiting** — brute-force and abuse guards on signin, signup, forgot-password, and content create/update, keyed by IP for unauthenticated routes and by account for authenticated ones (see [API overview](#api-overview)).
+- **Polished UX** — toast notifications for background actions, keyboard shortcuts (`/` to search, `n` for new content, `Esc` to close dialogs), and a responsive layout with a mobile hamburger nav.
 
 ## Stack
 
 | Layer    | Tech |
 |----------|------|
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS v4, React Router, Axios |
-| Backend  | Node.js, Express 5, TypeScript, Mongoose (MongoDB), Zod, JWT, bcrypt, Nodemailer |
+| Backend  | Node.js, Express 5, TypeScript, Mongoose (MongoDB), Zod, JWT, bcrypt, Nodemailer, Cheerio, express-rate-limit |
 | Database | MongoDB (Atlas or local) |
 
 ## Project structure
@@ -97,22 +100,26 @@ With `NODE_ENV=development`, the backend automatically falls back to `mongodb://
 
 All backend routes are mounted under `/api/v1`:
 
-| Method | Route | Auth | Description |
-|---|---|---|---|
-| POST | `/auth/signup` | – | Register a user, returns a JWT |
-| POST | `/auth/signin` | – | Log in, returns a JWT |
-| POST | `/auth/forgot-password` | – | Request a password-reset email (always returns the same response, whether or not the email exists) |
-| POST | `/auth/reset-password` | – | Complete a reset with `{ token, password }`; returns a fresh JWT (auto-login) |
-| GET | `/content` | Bearer | List the signed-in user's saved content |
-| POST | `/content` | Bearer | Create a content item |
-| PATCH | `/content/:contentId` | Bearer | Update a content item — only the fields sent are changed (title, type, link, notes, tags, isPinned) |
-| DELETE | `/content/:contentId` | Bearer | Delete a content item |
-| POST | `/brain/share` | Bearer | Enable/disable your public collection page as a whole |
-| POST | `/brain/publish` | Bearer | Publish/unpublish a single content item (`{ contentId, isPublic }`); auto-creates your public page link on first use |
-| GET | `/brain/:hash` | – | Fetch a user's publicly shared content by hash (only items marked public) |
-| GET | `/brain/:hash/item/:contentId` | – | Fetch a single publicly shared item by hash + id |
+| Method | Route | Auth | Rate limit | Description |
+|---|---|---|---|---|
+| POST | `/auth/signup` | – | 10 / hour / IP | Register a user, returns a JWT |
+| POST | `/auth/signin` | – | 10 / 15 min / IP | Log in, returns a JWT |
+| POST | `/auth/forgot-password` | – | 5 / hour / IP | Request a password-reset email (always returns the same response, whether or not the email exists) |
+| POST | `/auth/reset-password` | – | – | Complete a reset with `{ token, password }`; returns a fresh JWT (auto-login) |
+| GET | `/content` | Bearer | – | List the signed-in user's saved content; supports `page`, `limit`, `type`, `tag`, `search` query params |
+| GET | `/content/tags` | Bearer | – | List the signed-in user's tags with per-tag item counts |
+| POST | `/content` | Bearer | 60 / 15 min / account | Create a content item (auto-fetches a link preview when a `link` is given) |
+| PATCH | `/content/:contentId` | Bearer | 60 / 15 min / account | Update a content item — only the fields sent are changed (title, type, link, notes, tags, isPinned) |
+| DELETE | `/content` | Bearer | – | Bulk-delete content items, `{ ids: string[] }` |
+| DELETE | `/content/:contentId` | Bearer | – | Delete a single content item |
+| POST | `/brain/share` | Bearer | – | Enable/disable your public collection page as a whole |
+| POST | `/brain/publish` | Bearer | – | Publish/unpublish a single content item (`{ contentId, isPublic }`); auto-creates your public page link on first use |
+| GET | `/brain/:hash` | – | – | Fetch a user's publicly shared content by hash (only items marked public) |
+| GET | `/brain/:hash/item/:contentId` | – | – | Fetch a single publicly shared item by hash + id |
 
-Responses are always shaped `{ success, message, data? }` (or `{ success: false, message, errors? }` on failure).
+Responses are always shaped `{ success, message, data? }` (or `{ success: false, message, errors? }` on failure). A tripped rate limit returns `429` with `{ success: false, message: "Too many requests. Please try again later." }`.
+
+The content-create/update limiters are keyed by account (not IP) since those routes require auth — one user's usage never penalizes another user on the same network. The auth limiters are keyed by IP since those routes are unauthenticated. See `backend/src/middlewares/rateLimit.ts` for exact numbers and rationale.
 
 Content types are `twitter`, `youtube`, `article`, `link`, `document`, `thought` — though the "Add Content" UI currently only exposes four of them (YouTube, Twitter, Document, Link); `article` and `thought` exist in the schema but aren't reachable from the UI's type picker yet.
 
