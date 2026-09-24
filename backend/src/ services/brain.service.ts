@@ -24,9 +24,8 @@ export class BrainService {
     }
 
     const hash = await BrainService.ensureBrainLink(userId);
-    // All-or-nothing sharing: turning the public page on publishes every
-    // saved item, rather than requiring a separate per-item selection step.
-    await Content.updateMany({ userId }, { isPublic: true });
+    // Turning the public page on only makes the page reachable — items stay
+    // private until individually published via setContentVisibility.
     return { hash, isPublic: true };
   }
 

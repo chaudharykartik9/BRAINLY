@@ -58,8 +58,9 @@ src/models/*.ts                    Mongoose schemas
 
 - `AuthService.signup` — checks for an existing user by email or username, hashes the password with `bcryptjs`, creates the `User`, signs a JWT `{ id, email }`.
 - `AuthService.signin` — looks up by email with `.select('+password')` (password is `select: false` by default on the schema), compares with `bcrypt.compare`, signs the same JWT shape.
+- `AuthService.forgotPassword` / `resetPassword` — issues a short-lived reset token, emails a reset link via Nodemailer (or logs it to the console when no SMTP is configured, e.g. local dev), and on completion signs a fresh JWT (auto-login).
 - `authMiddleware` (`src/middlewares/auth.middleware.ts`) — reads `Authorization: Bearer <token>`, verifies with `ENV.JWT_SECRET`, runtime-checks the decoded payload shape (`isUserPayload`), and sets `req.user = { id, email }`. The `Express.Request.user` field is declared globally in `src/types/index.d.ts`.
-- No refresh tokens, no logout endpoint (logout is client-side `localStorage` clearing only), no password-reset flow.
+- No refresh tokens; logout is client-side `localStorage` clearing only, either manual or auto-triggered by the frontend's 401 interceptor (see the API client layer section below).
 
 ### Data model
 
@@ -70,16 +71,18 @@ User ──< Content >── Tag
 ```
 
 - **User** (`src/models/user.ts`): `username` (unique), `email` (unique), `password` (hashed, `select: false`), `avatarUrl`.
-- **Content** (`src/models/Content.ts`): `title`, `type` (enum: `tweet | youtube | article | audio | document | thought`), `link`, `notes`, `tags: Tag[]` (ObjectId refs), `userId` (indexed), `isPinned`, `metadata: { thumbnail, author, description }`. Compound index on `{ userId, type, createdAt }` for dashboard queries.
+- **Content** (`src/models/Content.ts`): `title`, `type` (enum: `twitter | youtube | article | link | document | thought`), `link`, `notes`, `tags: Tag[]` (ObjectId refs), `userId` (indexed), `isPinned`, `isPublic` (indexed — drives the public-brain query), `metadata: { thumbnail, author, description }`. Compound index on `{ userId, type, createdAt }` for dashboard queries.
 - **Tag** (`src/models/Tag.ts`): `title` (unique, lowercased). Upserted by title in `ContentService.createContent` — tags are auto-created on the fly, never managed via a dedicated endpoint.
 - **BrainLink** (`src/models/BrainLink.ts`): `hash` (unique, random 10-hex-char via `crypto.randomBytes(5)`), `userId` (unique — one share link per user), `isPublic`. Created/deleted by `BrainService.toggleShare`.
 
 ### Sharing flow
 
-1. Authenticated user calls `POST /api/v1/brain/share { isPublic: true }`.
-2. `BrainService.toggleShare` creates a `BrainLink` with a fresh random hash (or returns the existing one if already public), or deletes it if `isPublic: false`.
-3. Anyone with the hash can `GET /api/v1/brain/:hash` (no auth) — `BrainService.getPublicBrain` looks up the `BrainLink`, then returns the owning user's `username`/`avatarUrl` plus all their `Content` (tags populated), pinned-first.
-4. Knowledge of the hash is the only access control on the public endpoint — there's no rate limiting or expiry.
+Sharing is two independent layers: whether the public page exists at all, and which individual items appear on it.
+
+1. Authenticated user calls `POST /api/v1/brain/share { isPublic: true }`. `BrainService.toggleShare` creates a `BrainLink` with a fresh random hash (or returns the existing one), or deletes it if `isPublic: false`. This only makes the page reachable — it does **not** change any `Content.isPublic` flags.
+2. Each item is published/unpublished independently via `POST /api/v1/brain/publish { contentId, isPublic }` (`BrainService.setContentVisibility`), which flips that one `Content` document's `isPublic` flag and lazily creates the `BrainLink` if it doesn't exist yet.
+3. Anyone with the hash can `GET /api/v1/brain/:hash` (no auth) — `BrainService.getPublicBrain` looks up the `BrainLink`, then returns the owning user's `username`/`avatarUrl` plus only the `Content` items with `isPublic: true` (tags populated), pinned-first. A single item can also be fetched directly via `GET /api/v1/brain/:hash/item/:contentId`.
+4. Knowledge of the hash is the only access control on the public endpoints — there's no rate limiting or expiry.
 
 ### Error handling and responses
 
@@ -92,33 +95,36 @@ User ──< Content >── Tag
 ### Routing (`src/App.tsx`)
 
 ```
-/signin, /signup        → PublicOnlyRoute  (redirects to /dashboard if already authed)
-/dashboard               → ProtectedRoute   (redirects to /signin if not authed)
-/share/:hash             → public, no guard (PublicBrainPage)
-*                          → redirect to /dashboard
+/signin, /signup, /forgot-password   → PublicOnlyRoute  (redirects to /dashboard if already authed)
+/reset-password/:token               → public, no guard (must work even with a stale session logged in)
+/dashboard                            → ProtectedRoute   (redirects to /signin if not authed)
+/share/:hash                          → public, no guard (PublicBrainPage — the whole collection)
+/share/:hash/:contentId               → public, no guard (PublicContentPage — a single item)
+*                                       → redirect to /dashboard
 ```
 
-Both route guards read `AuthContext` and show a spinner while `loading` is true (i.e. while the initial `localStorage` check runs).
+Both route guards read `AuthContext` and show a full-page `Spinner` while `loading` is true (i.e. while the initial `localStorage` check runs). Every page component is route-split via `React.lazy`/`Suspense` (see `App.tsx`), so a signed-out visitor never downloads the dashboard bundle until they sign in.
 
 ### State management
 
-No Redux/Zustand/React Query — just two React Contexts:
+No Redux/Zustand/React Query — three React Contexts:
 
-- **`AuthContext`** (`src/context/AuthContext.tsx`) — `token`/`user` state, hydrated from and persisted to `localStorage` (`token`, `user` keys). Exposes `login(token, user)` / `logout()`. `isAuthenticated` is simply `!!token` — no token expiry/validity check on the client.
+- **`AuthContext`** (`src/context/AuthContext.tsx`) — `token`/`user` state, hydrated from and persisted to `localStorage` (`token`, `user` keys). Exposes `login(token, user)` / `logout()`. `isAuthenticated` is simply `!!token` — no token expiry/validity check on the client; an actually-expired token is instead caught centrally by the API client's 401 interceptor (below), not by anything in this context.
 - **`ContentContext`** (`src/context/ContentContext.tsx`) — fetches the user's content list on mount (and whenever `isAuthenticated` changes), exposes `contents`, plus client-side `selectedType`/`searchQuery` filtering via a memoized `filteredContents`. `addContent`/`deleteContent` optimistically update local state after the API call resolves (no optimistic-before-response updates).
+- **`ThemeContext`** (`src/context/ThemeContext.tsx`) — `theme: 'light' | 'dark'` + `toggleTheme()`. Initializes from `localStorage` (`brainly:theme`), falling back to `prefers-color-scheme` on first visit; toggles a `dark` class on `document.documentElement`, which Tailwind's `@custom-variant dark (&:where(.dark, .dark *))` (in `src/index.css`) hooks every `dark:` utility off of. A synchronous inline script in `index.html` applies the class before React mounts, to avoid a flash of the wrong theme.
 
 ### API client layer (`src/services/`)
 
-- `api.ts` exports the axios instance actually used everywhere (`auth.api.ts`, `content.api.ts`, `brain.api.ts` all import from it). It attaches `Authorization: Bearer <token>` from `localStorage` per request.
-- `axios.ts` exports a second, near-identical axios instance (`apiClient`) that additionally auto-clears `localStorage` and redirects to `/signin` on a 401 response — but **nothing imports `axios.ts`**, so that 401-auto-logout behavior is currently inert. Treat `api.ts` as the source of truth; either wire `axios.ts` in for real or fold its interceptor into `api.ts` if you need that behavior.
-- `auth.api.ts`, `content.api.ts`, `brain.api.ts` are thin per-resource wrappers returning typed `ApiResponse<T>` payloads. Each currently has one or two large commented-out earlier drafts left in the file above the live export.
+- `api.ts` is the single axios instance used everywhere (`auth.api.ts`, `content.api.ts`, `brain.api.ts` all import from it). A request interceptor attaches `Authorization: Bearer <token>` from `localStorage`; a response interceptor catches `401`s, clears `localStorage`, stashes an explanatory message under `SESSION_EXPIRED_MESSAGE_KEY` in `sessionStorage`, and redirects to `/signin` — `Signin.tsx` reads and clears that key on mount to surface the message once. (An earlier near-duplicate axios instance, `axios.ts`, existed briefly with this same logic but unwired; it has since been deleted — `api.ts` is the only client.)
+- `auth.api.ts`, `content.api.ts`, `brain.api.ts` are thin per-resource wrappers returning typed `ApiResponse<T>` payloads.
 
 ### Components
 
-- `components/layout/` — `AppLayout`, `Navbar`, `Sidebar` (dashboard chrome).
-- `components/content/` — `ContentCard`, `ContentGrid`, `ContentActions`, and `embeds/` (`TwitterEmbed`, `YoutubeEmbed`, `ArticleEmbed`, `NoteEmbed`) which render a `Content` item differently based on its `type`.
-- `components/modals/` — `AddContentModal`/`CreateContentModal` (creating content — note both exist, check which is actually used before assuming one is dead), `ShareBrainModal` (toggling/copying the public share link).
-- `components/common/` — generic `Button`, `Input`, `Badge`, `Dropdown`, `Modal` primitives.
+- `components/layout/` — `Navbar` (search, "Add Content", and an avatar dropdown menu with Public Brain / Dark Mode / Sign Out), `Sidebar` (category + tag filters). `AppLayout.tsx` is a dead leftover — `Dashboard.tsx` composes `Navbar`/`Sidebar` directly rather than using it.
+- `components/content/` — `ContentCard` (the live card, with pin/edit/delete actions and a footer share popover) and `ContentPreview` (type-specific preview rendering: tweet, YouTube embed, document, link). `ContentGrid.tsx`, `ContentActions.tsx`, and the whole `embeds/` directory (`TwitterEmbed`, `YoutubeEmbed`, `ArticleEmbed`, `NoteEmbed`) are dead — nothing imports them; `ContentCard`/`ContentPreview` superseded them.
+- `components/modals/` — `ContentFormModal` (create/edit content — the live one), `ShareBrainModal` (master public-page toggle plus a per-item "select what to share" list). `CreateContentModal.tsx` is a dead leftover, superseded by `ContentFormModal`.
+- `components/common/` — `Button`, `Input`, `Badge`, `Dropdown`, `Modal`, `ConfirmDialog`, `TagInput` primitives, plus shared `Spinner`/`Skeleton`/`CardGridSkeleton` loading components used instead of duplicated inline loading markup.
+- `pages/NotFound.tsx` exists but is dead — the catch-all route (`*`) redirects straight to `/dashboard` rather than rendering it.
 
 ### Hooks (`src/hooks/`)
 
@@ -128,13 +134,14 @@ No Redux/Zustand/React Query — just two React Contexts:
 
 ### Styling
 
-Tailwind CSS v4 via the `@tailwindcss/vite` plugin — no `tailwind.config.js`; theme/config is CSS-first (check `src/index.css` for `@theme` tokens). Fonts loaded from Google Fonts (`Inter`) via `<link>` tags in `index.html`.
+Tailwind CSS v4 via the `@tailwindcss/vite` plugin — no `tailwind.config.js`; theme/config is CSS-first (check `src/index.css` for `@theme` tokens and the `@custom-variant dark` declaration). Fonts loaded from Google Fonts (`Inter`) via `<link>` tags in `index.html`.
 
 ## Known inconsistencies (not yet cleaned up)
 
 - Dead root-level `package.json`/`node_modules`/`tsconfig.tsbuildinfo` with no corresponding `src/` — a stale copy of `backend/package.json`, not used by anything.
 - `src/ services/` and `src/utils/ logger.ts` on the backend have a literal leading space in the path.
-- `frontend/src/services/axios.ts` is an unused duplicate of `api.ts`.
+- `frontend/src/components/content/ContentGrid.tsx`, `ContentActions.tsx`, `content/embeds/*`, `components/modals/CreateContentModal.tsx`, `components/layout/AppLayout.tsx`, and `pages/NotFound.tsx` are dead code — nothing imports them, but they haven't been deleted.
 - `frontend/src/hooks/useContent.ts` and `useBrainShare.ts` are empty.
 - `CORS_ORIGIN` is read from env but not applied — CORS origins are hardcoded in `backend/src/app.ts`.
+- The repo's git history contains one commit with ~200MB of accidentally-committed local MongoDB data files (`backend/mongodata/`); left in place rather than rewritten, per a deliberate choice to avoid disrupting shared history.
 - No automated tests anywhere in the repo.

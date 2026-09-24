@@ -12,7 +12,9 @@ A personal knowledge-management app. Save links, tweets, videos, documents, and 
 - **Bulk actions** — multi-select items to pin, unpin, publish, unpublish, or delete them together.
 - **Auth with password reset** — email/password signup and signin (JWT-based), plus a full forgot-password → emailed reset link → new-password flow. In local development, if no SMTP is configured, reset links are logged to the backend console instead of emailed, so the flow works out of the box with zero email setup.
 - **Rate limiting** — brute-force and abuse guards on signin, signup, forgot-password, and content create/update, keyed by IP for unauthenticated routes and by account for authenticated ones (see [API overview](#api-overview)).
-- **Polished UX** — toast notifications for background actions, keyboard shortcuts (`/` to search, `n` for new content, `Esc` to close dialogs), and a responsive layout with a mobile hamburger nav.
+- **Dark mode** — app-wide light/dark theme, toggled from the avatar menu, persisted per-browser, defaulting to the OS preference on first visit. No flash of the wrong theme on load.
+- **Polished UX** — toast notifications for background actions, keyboard shortcuts (`/` to search, `n` for new content, `Esc` to close dialogs), a responsive layout with a mobile hamburger nav, route-level lazy loading (each page ships as its own chunk), and shared Spinner/Skeleton loading states instead of blank screens.
+- **Resilient sessions** — an expired or invalid JWT is caught centrally: the app auto-signs-out and redirects to sign-in with an explanatory message, instead of getting stuck in a broken signed-in state.
 
 ## Stack
 

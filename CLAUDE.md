@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Brainly ("Your Second Brain") is a personal knowledge-management app: users save links/notes tagged by type (tweet, youtube, article, audio, document, thought) and can optionally publish a read-only public share page of their whole collection via a random hash URL.
+Brainly ("Your Second Brain") is a personal knowledge-management app: users save links/notes tagged by type (twitter, youtube, article, link, document, thought) and can optionally publish a read-only public share page via a random hash URL, choosing per-item which content is public rather than all-or-nothing.
 
 Two independent apps in one repo, no shared package/monorepo tooling (no Turborepo/Nx/workspaces):
 
@@ -60,24 +60,26 @@ Layering is Router → Controller → Service → Mongoose Model:
 Errors are thrown as plain `Error` from services/controllers and turned into a JSON 500 by `errorHandler` (`src/utils/ logger.ts` — also has a leading space in its filename — logs the stack). Zod validation failures are caught by `validate` and returned directly as a 400, bypassing `errorHandler`.
 
 ### Brain sharing model
-`BrainLink` is a one-per-user (`userId` unique) `{ hash, isPublic }` record. `POST /api/v1/brain/share` (auth required) creates/deletes it; `GET /api/v1/brain/:hash` (no auth) is the public read endpoint that returns the owning user's profile plus all their `Content`, sorted pinned-first-then-newest. There's no ownership check tying a viewer to a link beyond the hash being unguessable.
+`BrainLink` is a one-per-user (`userId` unique) `{ hash, isPublic }` record — it only controls whether the public page is reachable at all. `POST /api/v1/brain/share` (auth) creates/deletes it and does **not** touch any `Content.isPublic` flags. Per-item visibility is separate: `POST /api/v1/brain/publish { contentId, isPublic }` (auth) flips one item's `Content.isPublic` and lazily creates the `BrainLink` if needed. `GET /api/v1/brain/:hash` (no auth) returns the owning user's profile plus only the `Content` where `isPublic: true`, sorted pinned-first-then-newest; `GET /api/v1/brain/:hash/item/:contentId` (no auth) returns one public item. There's no ownership check tying a viewer to a link beyond the hash being unguessable.
 
 ### API surface
 All mounted under `/api/v1` (see `src/routes/index.ts`):
-- `POST /auth/signup`, `POST /auth/signin`
-- `GET|POST /content`, `DELETE /content/:contentId` (all require `Authorization: Bearer <jwt>`)
-- `POST /brain/share` (auth), `GET /brain/:hash` (public)
+- `POST /auth/signup`, `POST /auth/signin`, `POST /auth/forgot-password`, `POST /auth/reset-password`
+- `GET /content`, `GET /content/tags`, `POST /content`, `PATCH /content/:contentId`, `DELETE /content` (bulk, `{ ids }`), `DELETE /content/:contentId` (all require `Authorization: Bearer <jwt>`)
+- `POST /brain/share` (auth), `POST /brain/publish` (auth), `GET /brain/:hash` (public), `GET /brain/:hash/item/:contentId` (public)
 
 Every response is `{ success, message, data? }` or `{ success: false, message, errors? }` — always go through `ApiResponse`, never `res.json()` directly, to keep this consistent.
 
 ### Frontend structure
-- `src/App.tsx` — all routing (`react-router-dom`), with `ProtectedRoute`/`PublicOnlyRoute` wrappers gating on `AuthContext.isAuthenticated`. `/signin`, `/signup`, `/dashboard` (protected), `/share/:hash` (public), everything else redirects to `/dashboard`.
+- `src/App.tsx` — all routing (`react-router-dom`), with `ProtectedRoute`/`PublicOnlyRoute` wrappers gating on `AuthContext.isAuthenticated`. `/signin`, `/signup`, `/forgot-password` (public-only), `/reset-password/:token` (unguarded), `/dashboard` (protected), `/share/:hash` and `/share/:hash/:contentId` (public), everything else redirects to `/dashboard`. Every page is `React.lazy`-loaded, wrapped in one `<Suspense>` with a full-page `Spinner` fallback.
 - `src/context/AuthContext.tsx` — token/user persisted to `localStorage` (`token`, `user` keys), no refresh-token flow.
 - `src/context/ContentContext.tsx` — fetches/holds the signed-in user's content list; owns client-side type-filter + search-query filtering (`filteredContents`).
-- `src/services/api.ts` (exports `API`/`api`, used by `auth.api.ts`/`content.api.ts`/`brain.api.ts`) is the axios instance actually in use, attaching the bearer token per-request. **`src/services/axios.ts` (`apiClient`) is a near-duplicate that also handles auto-logout-on-401 but is not imported anywhere** — if you need 401 auto-logout behavior, either wire `axios.ts` in or port its response interceptor into `api.ts` rather than assuming it's already active.
+- `src/context/ThemeContext.tsx` — light/dark theme, persisted to `localStorage` (`brainly:theme`), toggled from the Navbar's avatar dropdown; applies/removes a `dark` class on `<html>` that Tailwind's `@custom-variant dark` hooks `dark:` utilities off of. `index.html` has an inline pre-React script that applies the stored/preferred theme immediately, to avoid a flash of the wrong theme.
+- `src/services/api.ts` (exports `API`/`api`, used by `auth.api.ts`/`content.api.ts`/`brain.api.ts`) is the only axios instance — attaches the bearer token per-request via a request interceptor, and on a `401` response clears `localStorage`, stashes a message under `SESSION_EXPIRED_MESSAGE_KEY` in `sessionStorage`, and redirects to `/signin` (which reads/clears that key on mount). There is no separate `axios.ts` anymore.
 - `src/hooks/useContent.ts` and `src/hooks/useBrainShare.ts` are empty files (dead stubs); the real logic lives directly in `ContentContext`/components. `src/hooks/useAuth.ts` just re-exports `useAuth` from `AuthContext`.
-- Several `src/services/*.api.ts` files carry large commented-out earlier drafts above the live code — when editing these files, clean up rather than adding a fourth draft.
-- Tailwind v4 via `@tailwindcss/vite` (no `tailwind.config.js` — v4 is CSS-first, check `src/index.css` for `@theme`/config).
+- Dead files that still exist but nothing imports: `components/content/ContentGrid.tsx`, `ContentActions.tsx`, `components/content/embeds/*`, `components/modals/CreateContentModal.tsx`, `components/layout/AppLayout.tsx`, `pages/NotFound.tsx`. Don't assume these are wired in — check imports before editing one.
+- `components/common/Spinner.tsx`, `Skeleton.tsx` (+ `CardGridSkeleton`) are the shared loading primitives; prefer them over ad hoc loading markup.
+- Tailwind v4 via `@tailwindcss/vite` (no `tailwind.config.js` — v4 is CSS-first, check `src/index.css` for `@theme`/config and the `@custom-variant dark` declaration).
 
 ## Gotchas worth knowing before editing
 

@@ -175,9 +175,6 @@ export const DashboardPage: React.FC = () => {
       if (hash) {
         const generatedLink = `${window.location.origin}/share/${hash}`;
         setShareLink(generatedLink);
-        // Enabling the public page publishes every item server-side — refresh
-        // so each card's "Public" badge reflects that immediately.
-        await fetchContents(1, true);
         return generatedLink;
       }
       setShareLink(null);
@@ -467,6 +464,7 @@ export const DashboardPage: React.FC = () => {
         onClose={() => setIsShareModalOpen(false)}
         onToggleShare={handleToggleShare}
         shareLink={shareLink}
+        onSetItemVisibility={handlePublish}
       />
 
       <ConfirmDialog
