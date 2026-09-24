@@ -63,7 +63,7 @@ const PreviewShell: React.FC<{ children: React.ReactNode; className?: string }> 
   className = '',
 }) => (
   <div
-    className={`w-full min-h-[140px] rounded-xl border border-slate-100 bg-slate-50 p-4 flex flex-col gap-2 justify-center ${className}`}
+    className={`w-full min-h-[140px] rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 flex flex-col gap-2 justify-center ${className}`}
   >
     {children}
   </div>
@@ -77,15 +77,15 @@ const YoutubePreview: React.FC<{ content: IContent }> = ({ content }) => {
       <PreviewShell>
         <div className="flex items-center gap-2 text-red-500">
           <YoutubeIcon className="w-5 h-5" />
-          <span className="text-xs font-semibold text-slate-500">YouTube</span>
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">YouTube</span>
         </div>
-        <p className="text-sm text-slate-400 italic">No valid video link attached.</p>
+        <p className="text-sm text-slate-400 dark:text-slate-500 italic">No valid video link attached.</p>
       </PreviewShell>
     );
   }
 
   return (
-    <div className="w-full aspect-video rounded-xl overflow-hidden bg-slate-100">
+    <div className="w-full aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900">
       <iframe
         src={embedUrl}
         title={content.title}
@@ -156,9 +156,9 @@ const TwitterPreview: React.FC<{ content: IContent }> = ({ content }) => {
   }
 
   return (
-    <div className="relative min-h-[160px] max-h-96 overflow-y-auto rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center p-2">
+    <div className="relative min-h-[160px] max-h-96 overflow-y-auto rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 flex items-center justify-center p-2">
       {status === 'loading' && (
-        <span className="text-xs font-medium text-slate-400 absolute">Loading post…</span>
+        <span className="text-xs font-medium text-slate-400 dark:text-slate-500 absolute">Loading post…</span>
       )}
       <div ref={containerRef} className="w-full flex justify-center" />
     </div>
@@ -173,12 +173,12 @@ const TwitterFallback: React.FC<{ content: IContent }> = ({ content }) => {
     <PreviewShell className="items-start">
       <div className="flex items-center gap-2 text-sky-500">
         <TwitterIcon className="w-5 h-5" />
-        <span className="text-xs font-semibold text-slate-500">
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
           {handle ? `@${handle}` : 'X / Twitter post'}
         </span>
       </div>
-      <p className="text-sm font-medium text-slate-700 line-clamp-2">{title}</p>
-      {notes && <p className="text-xs text-slate-500 line-clamp-2">{notes}</p>}
+      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 line-clamp-2">{title}</p>
+      {notes && <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{notes}</p>}
       {link && (
         <a
           href={link}
@@ -199,19 +199,19 @@ const DocumentPreview: React.FC<{ content: IContent }> = ({ content }) => {
   const ext = getFileExtension(link);
 
   return (
-    <PreviewShell className="items-start bg-amber-50/60 border-amber-100">
-      <div className="flex items-center gap-2 text-amber-600">
+    <PreviewShell className="items-start bg-amber-50/60 dark:bg-amber-400/5 border-amber-100 dark:border-amber-400/20">
+      <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
         <DocumentIcon className="w-5 h-5" />
         <span className="text-xs font-semibold uppercase tracking-wide">
           {ext ? `${ext} Document` : 'Document Preview'}
         </span>
       </div>
       {notes ? (
-        <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line line-clamp-4">
+        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line line-clamp-4">
           {notes}
         </p>
       ) : (
-        <p className="text-sm text-slate-400 italic">No preview text added for this document yet.</p>
+        <p className="text-sm text-slate-400 dark:text-slate-500 italic">No preview text added for this document yet.</p>
       )}
     </PreviewShell>
   );
@@ -224,7 +224,7 @@ const LinkPreview: React.FC<{ content: IContent }> = ({ content }) => {
 
   if (metadata?.thumbnail && !thumbnailFailed) {
     return (
-      <div className="w-full rounded-xl overflow-hidden border border-slate-100 bg-slate-50">
+      <div className="w-full rounded-xl overflow-hidden border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
         <img
           src={metadata.thumbnail}
           alt=""
@@ -232,15 +232,15 @@ const LinkPreview: React.FC<{ content: IContent }> = ({ content }) => {
           onError={() => setThumbnailFailed(true)}
         />
         <div className="p-3 flex flex-col gap-1">
-          <div className="flex items-center gap-1.5 text-brand-600 min-w-0">
+          <div className="flex items-center gap-1.5 text-brand-600 dark:text-brand-400 min-w-0">
             <LinkIcon className="w-3.5 h-3.5 shrink-0" />
-            <span className="text-xs font-semibold text-slate-500 truncate">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">
               {metadata.author || domain}
             </span>
           </div>
-          <p className="text-sm font-medium text-slate-700 line-clamp-1">{title}</p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-200 line-clamp-1">{title}</p>
           {(notes || metadata.description) && (
-            <p className="text-xs text-slate-500 line-clamp-2">{notes || metadata.description}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{notes || metadata.description}</p>
           )}
         </div>
       </div>
@@ -248,21 +248,21 @@ const LinkPreview: React.FC<{ content: IContent }> = ({ content }) => {
   }
 
   return (
-    <PreviewShell className="items-start bg-gradient-to-br from-slate-50 to-brand-50/40">
-      <div className="flex items-center gap-2 text-brand-600 min-w-0 w-full">
+    <PreviewShell className="items-start bg-gradient-to-br from-slate-50 to-brand-50/40 dark:from-slate-900 dark:to-brand-500/5">
+      <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400 min-w-0 w-full">
         <LinkIcon className="w-5 h-5 shrink-0" />
-        <span className="text-xs font-semibold text-slate-500 truncate">
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">
           {metadata?.author || domain || 'Personal note'}
         </span>
       </div>
       {notes || metadata?.description ? (
-        <p className="text-sm text-slate-600 leading-relaxed line-clamp-3">
+        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
           {notes || metadata?.description}
         </p>
       ) : (
-        <p className="text-sm text-slate-500 font-medium line-clamp-1">{title}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium line-clamp-1">{title}</p>
       )}
-      {link && <span className="text-xs text-slate-400 truncate w-full">{link}</span>}
+      {link && <span className="text-xs text-slate-400 dark:text-slate-500 truncate w-full">{link}</span>}
     </PreviewShell>
   );
 };

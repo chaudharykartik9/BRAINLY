@@ -34,14 +34,14 @@ export const PublicBrainPage: React.FC = () => {
   }, [hash]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
       {/* Public Header */}
-      <header className="h-20 bg-white border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-20">
+      <header className="h-20 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-8 flex items-center justify-between sticky top-0 z-20">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-brand-50 text-brand-600 rounded-xl">
+          <div className="p-2 bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-300 rounded-xl">
             <LogoIcon className="w-6 h-6" />
           </div>
-          <span className="text-xl font-bold text-slate-800 tracking-tight">Brainly</span>
+          <span className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Brainly</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -62,13 +62,13 @@ export const PublicBrainPage: React.FC = () => {
       <main className="p-8 max-w-7xl w-full mx-auto flex-1">
         {loading ? (
           <div>
-            <Skeleton className="h-10 w-64 rounded-xl mb-8 bg-slate-200/70" />
+            <Skeleton className="h-10 w-64 rounded-xl mb-8 bg-slate-200/70 dark:bg-slate-700/50" />
             <CardGridSkeleton count={6} />
           </div>
         ) : error ? (
-          <div className="text-center py-24 bg-white rounded-3xl border border-slate-200/80 p-8 shadow-xs max-w-lg mx-auto mt-12">
-            <h3 className="text-xl font-bold text-slate-800 tracking-tight">Brain Unavailable</h3>
-            <p className="text-sm text-slate-500 mt-2">{error}</p>
+          <div className="text-center py-24 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-8 shadow-xs max-w-lg mx-auto mt-12">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Brain Unavailable</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{error}</p>
             <Link to="/signup">
               <Button variant="primary" size="md" className="mt-6">
                 Start Your Own Brain
@@ -79,10 +79,10 @@ export const PublicBrainPage: React.FC = () => {
           <div>
             {/* Title Header */}
             <div className="mb-8">
-              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
                 {brainData.username}'s Second Brain
               </h1>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                 Showing {brainData.content.length} public item
                 {brainData.content.length === 1 ? '' : 's'}
               </p>
@@ -96,8 +96,8 @@ export const PublicBrainPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 bg-white rounded-3xl border border-slate-200/80 p-8 shadow-xs">
-                <p className="text-slate-500 text-sm">This brain doesn't have any public content yet.</p>
+              <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-8 shadow-xs">
+                <p className="text-slate-500 dark:text-slate-400 text-sm">This brain doesn't have any public content yet.</p>
               </div>
             )}
           </div>

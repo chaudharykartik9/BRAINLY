@@ -50,13 +50,13 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Modal Container */}
       <div
-        className={`relative w-full ${maxWidths[maxWidth]} bg-white rounded-2xl shadow-2xl border border-slate-100 p-6 z-10 animate-in fade-in zoom-in-95 duration-150`}
+        className={`relative w-full ${maxWidths[maxWidth]} bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 p-6 z-10 animate-in fade-in zoom-in-95 duration-150`}
       >
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-slate-800 tracking-tight">{title}</h3>
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight">{title}</h3>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
             <CrossIcon className="w-5 h-5" />
           </button>

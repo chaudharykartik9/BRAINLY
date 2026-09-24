@@ -36,13 +36,13 @@ export const PublicContentPage: React.FC = () => {
   }, [hash, contentId]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="h-20 bg-white border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-20">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+      <header className="h-20 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-8 flex items-center justify-between sticky top-0 z-20">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-brand-50 text-brand-600 rounded-xl">
+          <div className="p-2 bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-300 rounded-xl">
             <LogoIcon className="w-6 h-6" />
           </div>
-          <span className="text-xl font-bold text-slate-800 tracking-tight">Brainly</span>
+          <span className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Brainly</span>
         </div>
         <div className="flex items-center gap-3">
           <Link to="/signin">
@@ -60,11 +60,11 @@ export const PublicContentPage: React.FC = () => {
 
       <main className="p-8 max-w-2xl w-full mx-auto flex-1">
         {loading ? (
-          <Skeleton className="h-72 rounded-2xl bg-slate-200/60" />
+          <Skeleton className="h-72 rounded-2xl bg-slate-200/60 dark:bg-slate-700/50" />
         ) : error || !data ? (
-          <div className="text-center py-24 bg-white rounded-3xl border border-slate-200/80 p-8 shadow-xs mt-8">
-            <h3 className="text-xl font-bold text-slate-800 tracking-tight">Item Unavailable</h3>
-            <p className="text-sm text-slate-500 mt-2">
+          <div className="text-center py-24 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-8 shadow-xs mt-8">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Item Unavailable</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
               {error || 'This item is private or no longer exists.'}
             </p>
             <Link to="/signup">
@@ -76,7 +76,7 @@ export const PublicContentPage: React.FC = () => {
         ) : (
           <div>
             <div className="mb-6">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Shared by {data.username}
               </p>
             </div>

@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: toggled by ThemeContext adding/removing `dark`
+   on <html>, rather than following prefers-color-scheme automatically —
+   lets the user override the system setting and persists their choice. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-brand-50: #eff6ff;
   --color-brand-100: #dbeafe;

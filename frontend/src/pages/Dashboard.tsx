@@ -285,7 +285,7 @@ export const DashboardPage: React.FC = () => {
       : `${selectedType}s`;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
       <Sidebar
         selectedType={selectedType}
         onSelectType={(t) => {
@@ -314,10 +314,10 @@ export const DashboardPage: React.FC = () => {
           {/* Section Header */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-2xl font-bold text-slate-800 tracking-tight capitalize">
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight capitalize">
                 {heading}
               </h1>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                 Showing {contents.length} of {totalCount} saved item{totalCount === 1 ? '' : 's'}
               </p>
             </div>
@@ -333,19 +333,19 @@ export const DashboardPage: React.FC = () => {
 
           {/* Bulk action bar */}
           {isSelectionMode && (
-            <div className="flex flex-wrap items-center gap-3 mb-6 p-3 rounded-xl border border-brand-100 bg-brand-50">
-              <span className="text-sm font-semibold text-brand-700">{selectedIds.size} selected</span>
+            <div className="flex flex-wrap items-center gap-3 mb-6 p-3 rounded-xl border border-brand-100 dark:border-brand-400/20 bg-brand-50 dark:bg-brand-500/10">
+              <span className="text-sm font-semibold text-brand-700 dark:text-brand-300">{selectedIds.size} selected</span>
               <button
                 type="button"
                 onClick={() => setSelectedIds(new Set(contents.map((c) => c._id)))}
-                className="text-xs font-semibold text-brand-600 hover:underline"
+                className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline"
               >
                 Select all loaded
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedIds(new Set())}
-                className="text-xs font-semibold text-brand-600 hover:underline"
+                className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline"
               >
                 Clear
               </button>
@@ -430,9 +430,9 @@ export const DashboardPage: React.FC = () => {
               )}
             </>
           ) : (
-            <div className="text-center py-24 bg-white rounded-3xl border border-slate-200/80 p-8 shadow-xs">
-              <h3 className="text-lg font-bold text-slate-800 tracking-tight">No content found</h3>
-              <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
+            <div className="text-center py-24 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-8 shadow-xs">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight">No content found</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
                 {searchQuery || selectedTag
                   ? 'No items matched your search criteria. Try a different query.'
                   : 'Your collection is empty. Start adding links, tweets, videos, or documents.'}

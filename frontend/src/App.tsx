@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Spinner } from './components/common/Spinner';
 
 // Each route's page is its own chunk, fetched on demand instead of bundled
@@ -24,7 +25,7 @@ const PublicContentPage = lazy(() =>
 );
 
 const FullPageSpinner: React.FC = () => (
-  <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+  <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
     <Spinner />
   </div>
 );
@@ -51,61 +52,63 @@ const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
 export const App: React.FC = () => {
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <Suspense fallback={<FullPageSpinner />}>
-            <Routes>
-              {/* Public Authentication Routes */}
-              <Route
-                path="/signin"
-                element={
-                  <PublicOnlyRoute>
-                    <SigninPage />
-                  </PublicOnlyRoute>
-                }
-              />
-              <Route
-                path="/signup"
-                element={
-                  <PublicOnlyRoute>
-                    <SignupPage />
-                  </PublicOnlyRoute>
-                }
-              />
-              <Route
-                path="/forgot-password"
-                element={
-                  <PublicOnlyRoute>
-                    <ForgotPasswordPage />
-                  </PublicOnlyRoute>
-                }
-              />
-              {/* Not gated by PublicOnlyRoute: a reset link must work even if
-                  this browser still has an old/stale session logged in. */}
-              <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Suspense fallback={<FullPageSpinner />}>
+              <Routes>
+                {/* Public Authentication Routes */}
+                <Route
+                  path="/signin"
+                  element={
+                    <PublicOnlyRoute>
+                      <SigninPage />
+                    </PublicOnlyRoute>
+                  }
+                />
+                <Route
+                  path="/signup"
+                  element={
+                    <PublicOnlyRoute>
+                      <SignupPage />
+                    </PublicOnlyRoute>
+                  }
+                />
+                <Route
+                  path="/forgot-password"
+                  element={
+                    <PublicOnlyRoute>
+                      <ForgotPasswordPage />
+                    </PublicOnlyRoute>
+                  }
+                />
+                {/* Not gated by PublicOnlyRoute: a reset link must work even if
+                    this browser still has an old/stale session logged in. */}
+                <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
-              {/* Protected App Workspace */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Protected App Workspace */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Shared Public Routes */}
-              <Route path="/share/:hash/:contentId" element={<PublicContentPage />} />
-              <Route path="/share/:hash" element={<PublicBrainPage />} />
+                {/* Shared Public Routes */}
+                <Route path="/share/:hash/:contentId" element={<PublicContentPage />} />
+                <Route path="/share/:hash" element={<PublicBrainPage />} />
 
-              {/* Fallback Root Redirect */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </AuthProvider>
-    </ToastProvider>
+                {/* Fallback Root Redirect */}
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 };
 

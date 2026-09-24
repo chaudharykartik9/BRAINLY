@@ -231,22 +231,22 @@ export const SignupPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200/80 p-8 shadow-xs">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-8 shadow-xs">
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="p-3 bg-brand-50 text-brand-600 rounded-2xl mb-3">
+          <div className="p-3 bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-300 rounded-2xl mb-3">
             <LogoIcon className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
             Create an account
           </h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Build and curate your personal second brain
           </p>
         </div>
 
         {error && (
-          <div className="mb-5 p-3.5 text-xs font-medium text-red-600 bg-red-50 rounded-xl border border-red-100">
+          <div className="mb-5 p-3.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 rounded-xl border border-red-100 dark:border-red-400/20">
             {error}
           </div>
         )}
@@ -302,7 +302,7 @@ export const SignupPage: React.FC = () => {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-slate-500 mt-6">
+        <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
           Already have an account?{' '}
           <Link
             to="/signin"

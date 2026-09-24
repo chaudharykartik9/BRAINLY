@@ -185,8 +185,8 @@ export const ContentCard: React.FC<ContentCardProps> = ({
   return (
     <>
       <div
-        className={`bg-white rounded-2xl border p-5 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between group ${
-          isSelected ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200/80'
+        className={`bg-white dark:bg-slate-800 rounded-2xl border p-5 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between group ${
+          isSelected ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200/80 dark:border-slate-700'
         } ${isClickable ? 'cursor-pointer' : ''}`}
         onClick={handleCardClick}
         onKeyDown={handleCardKeyDown}
@@ -208,17 +208,17 @@ export const ContentCard: React.FC<ContentCardProps> = ({
                   aria-label={`Select ${title}`}
                 />
               ) : (
-                <span className="p-1.5 rounded-lg bg-slate-50 border border-slate-100 shrink-0">
+                <span className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700 shrink-0">
                   {renderIcon()}
                 </span>
               )}
-              <h4 className="font-semibold text-slate-800 line-clamp-1 text-sm tracking-tight">
+              <h4 className="font-semibold text-slate-800 dark:text-slate-100 line-clamp-1 text-sm tracking-tight">
                 {title}
               </h4>
             </div>
 
             {!isSelectionMode && (
-              <div className="flex items-center gap-1 shrink-0 text-slate-400">
+              <div className="flex items-center gap-1 shrink-0 text-slate-400 dark:text-slate-500">
                 {!isReadOnly && onTogglePin && (
                   <button
                     type="button"
@@ -270,7 +270,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
 
           {/* Notes (embed-style cards only) */}
           {showSeparateNotes && (
-            <p className="mt-3 text-sm text-slate-600 line-clamp-3 leading-relaxed">{notes}</p>
+            <p className="mt-3 text-sm text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">{notes}</p>
           )}
 
           {/* Tags */}
@@ -299,17 +299,17 @@ export const ContentCard: React.FC<ContentCardProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs text-slate-400">
+        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between gap-2 text-xs text-slate-400 dark:text-slate-500">
           <div className="flex items-center gap-2 min-w-0">
             <span className="truncate">Added {formatRelativeDate(createdAt)}</span>
             {!isReadOnly && isPinned && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-100 dark:border-amber-400/20 bg-amber-50 dark:bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
                 <BookmarkIcon className="h-2.5 w-2.5" filled />
                 Pinned
               </span>
             )}
             {!isReadOnly && isPublic && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 dark:border-emerald-400/20 bg-emerald-50 dark:bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 Public
               </span>
@@ -335,14 +335,14 @@ export const ContentCard: React.FC<ContentCardProps> = ({
             {isSharePopoverOpen && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute bottom-full right-0 mb-2 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg z-10"
+                className="absolute bottom-full right-0 mb-2 w-64 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-lg z-10"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-slate-600">Share</span>
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Share</span>
                   <button
                     type="button"
                     onClick={() => setIsSharePopoverOpen(false)}
-                    className="p-0.5 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                     aria-label="Close"
                   >
                     <CrossIcon className="w-3.5 h-3.5" />
@@ -356,7 +356,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
                       setIsSharePopoverOpen(false);
                       onShareBrain();
                     }}
-                    className="w-full mb-2 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold py-2 transition-colors"
+                    className="w-full mb-2 rounded-lg bg-brand-50 dark:bg-brand-500/10 hover:bg-brand-100 dark:hover:bg-brand-500/20 text-brand-700 dark:text-brand-300 text-xs font-semibold py-2 transition-colors"
                   >
                     Share this brain
                   </button>
@@ -367,14 +367,14 @@ export const ContentCard: React.FC<ContentCardProps> = ({
                     readOnly
                     value={isPublishing ? 'Generating link…' : (publicUrl ?? '')}
                     onClick={(e) => (e.target as HTMLInputElement).select()}
-                    className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] text-slate-600"
+                    className="min-w-0 flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-2 py-1.5 text-[11px] text-slate-600 dark:text-slate-300"
                   />
                   <button
                     type="button"
                     title="Copy link"
                     onClick={handleCopyLink}
                     disabled={!publicUrl}
-                    className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                    className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1.5 text-[11px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
                   >
                     <CopyIcon className="w-3 h-3" />
                     Copy

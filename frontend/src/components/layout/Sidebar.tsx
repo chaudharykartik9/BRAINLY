@@ -51,22 +51,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       <aside
-        className={`w-72 bg-white border-r border-slate-100 flex flex-col h-screen fixed left-0 top-0 z-40 transition-transform duration-200 lg:translate-x-0 ${
+        className={`w-72 bg-white dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700 flex flex-col h-screen fixed left-0 top-0 z-40 transition-transform duration-200 lg:translate-x-0 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Brand Header */}
-        <div className="flex items-center justify-between gap-3 px-6 h-20 border-b border-slate-100">
+        <div className="flex items-center justify-between gap-3 px-6 h-20 border-b border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-brand-50 text-brand-600 rounded-xl">
+            <div className="p-2 bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-300 rounded-xl">
               <LogoIcon className="w-7 h-7" />
             </div>
-            <span className="text-xl font-bold text-slate-800 tracking-tight">Brainly</span>
+            <span className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Brainly</span>
           </div>
           <button
             type="button"
             onClick={onCloseMobile}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 lg:hidden"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-700 lg:hidden"
             aria-label="Close menu"
           >
             <CrossIcon className="w-5 h-5" />
@@ -75,7 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-          <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Categories
           </p>
           {navItems.map((item) => {
@@ -86,11 +86,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => selectType(item.type)}
                 className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-brand-50 text-brand-700 font-semibold'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300 font-semibold'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
-                <span className={isActive ? 'text-brand-600' : 'text-slate-400'}>{item.icon}</span>
+                <span className={isActive ? 'text-brand-600 dark:text-brand-300' : 'text-slate-400 dark:text-slate-500'}>{item.icon}</span>
                 {item.label}
               </button>
             );
@@ -98,7 +98,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {tags.length > 0 && (
             <>
-              <p className="px-3 pt-6 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <p className="px-3 pt-6 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Tags
               </p>
               {tags.map((tag) => {
@@ -109,12 +109,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onClick={() => selectTag(tag.title)}
                     className={`w-full flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-brand-50 text-brand-700 font-semibold'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300 font-semibold'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100'
                     }`}
                   >
                     <span className="truncate">#{tag.title}</span>
-                    <span className="text-xs text-slate-400 shrink-0">{tag.count}</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0">{tag.count}</span>
                   </button>
                 );
               })}

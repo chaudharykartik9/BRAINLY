@@ -149,14 +149,14 @@ export const ContentFormModal: React.FC<ContentFormModalProps> = ({
       <Modal isOpen={isOpen} onClose={requestClose} title={isEditing ? 'Edit Content' : 'Add New Content'}>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="p-3 text-xs font-medium text-red-600 bg-red-50 rounded-xl border border-red-100">
+            <div className="p-3 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 rounded-xl border border-red-100 dark:border-red-400/20">
               {error}
             </div>
           )}
 
           {/* Content Type Selector */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Type
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -168,7 +168,7 @@ export const ContentFormModal: React.FC<ContentFormModalProps> = ({
                   className={`py-2 text-xs font-semibold rounded-xl border transition-all ${
                     type === t.value
                       ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   {t.label}
@@ -193,7 +193,7 @@ export const ContentFormModal: React.FC<ContentFormModalProps> = ({
           />
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Description / Notes
             </label>
             <textarea
@@ -201,12 +201,12 @@ export const ContentFormModal: React.FC<ContentFormModalProps> = ({
               placeholder="Add key insights, summaries, or notes..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3.5 py-2 text-sm rounded-xl border bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+              className="w-full px-3.5 py-2 text-sm rounded-xl border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Tags
             </label>
             <TagInput
@@ -217,7 +217,7 @@ export const ContentFormModal: React.FC<ContentFormModalProps> = ({
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-700">
             <Button variant="outline" type="button" onClick={requestClose}>
               Cancel
             </Button>

@@ -18,7 +18,7 @@ interface CardGridSkeletonProps {
 export const CardGridSkeleton: React.FC<CardGridSkeletonProps> = ({ count = 6, className = '' }) => (
   <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}>
     {Array.from({ length: count }, (_, i) => (
-      <Skeleton key={i} className="h-64 rounded-2xl bg-slate-200/60" />
+      <Skeleton key={i} className="h-64 rounded-2xl bg-slate-200/60 dark:bg-slate-700/50" />
     ))}
   </div>
 );

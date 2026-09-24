@@ -12,7 +12,17 @@
       rel="stylesheet"
     />
   </head>
-  <body class="bg-slate-50 font-sans text-slate-800 antialiased selection:bg-brand-500/15 selection:text-brand-700">
+  <body class="bg-slate-50 font-sans text-slate-800 antialiased selection:bg-brand-500/15 selection:text-brand-700 dark:bg-slate-900 dark:text-slate-100">
+    <script>
+      // Applied synchronously (before React mounts) so there's no flash of
+      // the wrong theme on load — ThemeContext keeps this class in sync
+      // afterwards, this just matches its own initial-theme logic.
+      (function () {
+        var stored = localStorage.getItem('brainly:theme');
+        var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (dark) document.documentElement.classList.add('dark');
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

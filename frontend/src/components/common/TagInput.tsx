@@ -48,17 +48,17 @@ export const TagInput: React.FC<TagInputProps> = ({ value, onChange, suggestions
 
   return (
     <div className="relative">
-      <div className="w-full min-h-10 px-2.5 py-1.5 flex flex-wrap items-center gap-1.5 rounded-xl border bg-white border-slate-200 focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500 transition-all">
+      <div className="w-full min-h-10 px-2.5 py-1.5 flex flex-wrap items-center gap-1.5 rounded-xl border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500 transition-all">
         {value.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 rounded-md bg-brand-50 border border-brand-100/70 px-2 py-0.5 text-xs font-medium text-brand-700"
+            className="inline-flex items-center gap-1 rounded-md bg-brand-50 dark:bg-brand-500/10 border border-brand-100/70 dark:border-brand-400/20 px-2 py-0.5 text-xs font-medium text-brand-700 dark:text-brand-300"
           >
             #{tag}
             <button
               type="button"
               onClick={() => removeTag(tag)}
-              className="hover:text-brand-900"
+              className="hover:text-brand-900 dark:hover:text-brand-100"
               aria-label={`Remove tag ${tag}`}
             >
               <CrossIcon className="w-3 h-3" />
@@ -73,19 +73,19 @@ export const TagInput: React.FC<TagInputProps> = ({ value, onChange, suggestions
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => window.setTimeout(() => setShowSuggestions(false), 150)}
           placeholder={value.length === 0 ? placeholder : ''}
-          className="flex-1 min-w-[80px] text-sm outline-hidden bg-transparent py-1"
+          className="flex-1 min-w-[80px] text-sm outline-hidden bg-transparent py-1 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
         />
       </div>
 
       {showSuggestions && filteredSuggestions.length > 0 && (
-        <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg py-1 max-h-40 overflow-y-auto">
+        <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg py-1 max-h-40 overflow-y-auto">
           {filteredSuggestions.map((s) => (
             <button
               key={s}
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => addTag(s)}
-              className="w-full text-left px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+              className="w-full text-left px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
             >
               #{s}
             </button>

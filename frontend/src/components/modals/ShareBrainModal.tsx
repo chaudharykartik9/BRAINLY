@@ -19,7 +19,7 @@ const Toggle: React.FC<{ on: boolean; disabled?: boolean; onClick: () => void }>
     onClick={onClick}
     disabled={disabled}
     className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden disabled:cursor-wait disabled:opacity-60 ${
-      on ? 'bg-brand-600' : 'bg-slate-200'
+      on ? 'bg-brand-600' : 'bg-slate-200 dark:bg-slate-700'
     }`}
   >
     <span
@@ -61,10 +61,10 @@ export const ShareBrainModal: React.FC<ShareBrainModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} title="Share Your Second Brain">
       <div className="space-y-5">
         {/* Master public-page toggle */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4">
+        <div className="flex items-center justify-between rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4">
           <div>
-            <p className="text-sm font-semibold text-slate-800">Public page</p>
-            <p className="text-xs text-slate-500">
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Public page</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Anyone with the link can view your saved items.
             </p>
           </div>
@@ -74,7 +74,7 @@ export const ShareBrainModal: React.FC<ShareBrainModalProps> = ({
         {/* Shareable URL */}
         {isPublic && shareLink && (
           <div className="space-y-2">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Shareable URL
             </label>
             <div className="flex gap-2">
@@ -82,7 +82,7 @@ export const ShareBrainModal: React.FC<ShareBrainModalProps> = ({
                 type="text"
                 readOnly
                 value={shareLink}
-                className="w-full select-all rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 font-mono text-xs text-slate-700"
+                className="w-full select-all rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3.5 py-2 font-mono text-xs text-slate-700 dark:text-slate-300"
               />
               <Button variant="primary" size="sm" onClick={handleCopy}>
                 {copied ? 'Copied!' : 'Copy'}
@@ -91,7 +91,7 @@ export const ShareBrainModal: React.FC<ShareBrainModalProps> = ({
           </div>
         )}
 
-        <div className="flex justify-end border-t border-slate-100 pt-3">
+        <div className="flex justify-end border-t border-slate-100 dark:border-slate-700 pt-3">
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
