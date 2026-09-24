@@ -403,6 +403,7 @@ export const DashboardPage: React.FC = () => {
                     content={content}
                     onDelete={handleDeleteContent}
                     onPublish={handlePublish}
+                    onShareBrain={() => setIsShareModalOpen(true)}
                     onEdit={openEditModal}
                     onTogglePin={handleTogglePin}
                     onTagClick={handleSelectTag}

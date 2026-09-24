@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { IContent } from '../../types/content.types';
 import { Badge } from '../common/Badge';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import { ContentPreview } from './ContentPreview';
-import { DocumentIcon, EditIcon, ExternalLinkIcon, LinkIcon, PinIcon, TrashIcon, TwitterIcon, YoutubeIcon } from '../icons';
+import {
+  BookmarkIcon,
+  CopyIcon,
+  CrossIcon,
+  DocumentIcon,
+  EditIcon,
+  LinkIcon,
+  ShareIcon,
+  TrashIcon,
+  TwitterIcon,
+  YoutubeIcon,
+} from '../icons';
 import { formatRelativeDate } from '../../utils/formatters';
 import { useToast } from '../../context/ToastContext';
 import { extractErrorMessage } from '../../utils/apiError';
@@ -15,6 +26,8 @@ interface ContentCardProps {
   onTogglePin?: (id: string, isPinned: boolean) => Promise<void>;
   /** Publish/unpublish this item; resolves to its public single-item URL (or null). */
   onPublish?: (id: string, isPublic: boolean) => Promise<string | null>;
+  /** Opens the whole-collection "Share Brain" modal, offered as a shortcut from the item's share popover. */
+  onShareBrain?: () => void;
   onTagClick?: (tagTitle: string) => void;
   isReadOnly?: boolean;
   isSelectionMode?: boolean;
@@ -22,12 +35,24 @@ interface ContentCardProps {
   onToggleSelect?: (id: string) => void;
 }
 
+// The link's hostname reads as a much more useful footer label than a
+// generic content-type word (e.g. "youtube.com" vs just "Youtube").
+const getLinkName = (link: string | undefined, type: string): string => {
+  if (!link) return type;
+  try {
+    return new URL(link).hostname.replace(/^www\./, '');
+  } catch {
+    return type;
+  }
+};
+
 export const ContentCard: React.FC<ContentCardProps> = ({
   content,
   onDelete,
   onEdit,
   onTogglePin,
   onPublish,
+  onShareBrain,
   onTagClick,
   isReadOnly = false,
   isSelectionMode = false,
@@ -40,6 +65,9 @@ export const ContentCard: React.FC<ContentCardProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPinning, setIsPinning] = useState(false);
+  const [isSharePopoverOpen, setIsSharePopoverOpen] = useState(false);
+  const [publicUrl, setPublicUrl] = useState<string | null>(null);
+  const sharePopoverRef = useRef<HTMLDivElement>(null);
 
   const renderIcon = () => {
     switch (type) {
@@ -76,39 +104,53 @@ export const ContentCard: React.FC<ContentCardProps> = ({
     }
   };
 
-  // Publishes this item (idempotent) and shares its public link — the native
-  // share sheet where available, clipboard copy otherwise. Never navigates.
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!onPublish) return;
+  // Close the share popover on an outside click or Escape.
+  useEffect(() => {
+    if (!isSharePopoverOpen) return;
 
-    let publicUrl: string | null = null;
+    const handlePointerDown = (e: MouseEvent) => {
+      if (sharePopoverRef.current && !sharePopoverRef.current.contains(e.target as Node)) {
+        setIsSharePopoverOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsSharePopoverOpen(false);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isSharePopoverOpen]);
+
+  // Publishes this item (idempotent) and opens a popover with its public
+  // link, ready to copy, plus a shortcut into the whole-brain share flow.
+  const handleOpenSharePopover = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsSharePopoverOpen(true);
+    if (!onPublish || publicUrl) return;
+
     try {
       setIsPublishing(true);
-      publicUrl = await onPublish(_id, true);
+      const url = await onPublish(_id, true);
+      setPublicUrl(url);
     } catch (err) {
       showToast(extractErrorMessage(err, 'Failed to publish this item'), 'error');
-      return;
     } finally {
       setIsPublishing(false);
     }
-    if (!publicUrl) return;
+  };
 
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, text: notes || undefined, url: publicUrl });
-      } catch {
-        // AbortError (user cancelled) or any other failure — not fatal.
-      }
-      return;
-    }
-
+  const handleCopyLink = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!publicUrl || !navigator.clipboard) return;
     try {
-      if (!navigator.clipboard) return;
       await navigator.clipboard.writeText(publicUrl);
       showToast('Public link copied');
     } catch {
-      // Clipboard write denied — fail silently rather than show a false success.
+      showToast('Could not copy the link', 'error');
     }
   };
 
@@ -187,18 +229,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
                       isPinned ? 'text-amber-500 hover:text-amber-600' : 'hover:text-amber-500'
                     }`}
                   >
-                    <PinIcon className="w-4 h-4" filled={isPinned} />
-                  </button>
-                )}
-                {!isReadOnly && onPublish && (
-                  <button
-                    type="button"
-                    title={isPublic ? 'Share public link' : 'Publish & share'}
-                    onClick={handleShare}
-                    disabled={isPublishing}
-                    className="p-1 hover:text-brand-600 transition-colors disabled:opacity-40"
-                  >
-                    <ExternalLinkIcon className="w-4 h-4" />
+                    <BookmarkIcon className="w-4 h-4" filled={isPinned} />
                   </button>
                 )}
                 {!isReadOnly && onEdit && (
@@ -209,9 +240,10 @@ export const ContentCard: React.FC<ContentCardProps> = ({
                       e.stopPropagation();
                       onEdit(content);
                     }}
-                    className="p-1 hover:text-brand-600 transition-colors"
+                    className="inline-flex items-center gap-1 px-1.5 py-1 hover:text-brand-600 transition-colors"
                   >
                     <EditIcon className="w-4 h-4" />
+                    <span className="text-xs font-medium">Edit</span>
                   </button>
                 )}
                 {!isReadOnly && onDelete && (
@@ -267,12 +299,12 @@ export const ContentCard: React.FC<ContentCardProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs text-slate-400">
           <div className="flex items-center gap-2 min-w-0">
             <span className="truncate">Added {formatRelativeDate(createdAt)}</span>
             {!isReadOnly && isPinned && (
               <span className="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
-                <PinIcon className="h-2.5 w-2.5" filled />
+                <BookmarkIcon className="h-2.5 w-2.5" filled />
                 Pinned
               </span>
             )}
@@ -283,7 +315,74 @@ export const ContentCard: React.FC<ContentCardProps> = ({
               </span>
             )}
           </div>
-          <span className="capitalize font-medium shrink-0">{type}</span>
+
+          <div className="relative flex items-center gap-2 shrink-0" ref={sharePopoverRef}>
+            {!isReadOnly && onPublish && (
+              <button
+                type="button"
+                title="Share this item"
+                onClick={handleOpenSharePopover}
+                className="inline-flex items-center gap-1 rounded-lg bg-brand-600 hover:bg-brand-700 text-white px-2.5 py-1 text-[11px] font-semibold transition-colors"
+              >
+                <ShareIcon className="w-3 h-3" />
+                Share
+              </button>
+            )}
+            <span className="font-medium truncate max-w-28" title={getLinkName(link, type)}>
+              {getLinkName(link, type)}
+            </span>
+
+            {isSharePopoverOpen && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute bottom-full right-0 mb-2 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg z-10"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-slate-600">Share</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsSharePopoverOpen(false)}
+                    className="p-0.5 text-slate-400 hover:text-slate-600 transition-colors"
+                    aria-label="Close"
+                  >
+                    <CrossIcon className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {onShareBrain && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSharePopoverOpen(false);
+                      onShareBrain();
+                    }}
+                    className="w-full mb-2 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold py-2 transition-colors"
+                  >
+                    Share this brain
+                  </button>
+                )}
+
+                <div className="flex items-center gap-1.5">
+                  <input
+                    readOnly
+                    value={isPublishing ? 'Generating link…' : (publicUrl ?? '')}
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                    className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] text-slate-600"
+                  />
+                  <button
+                    type="button"
+                    title="Copy link"
+                    onClick={handleCopyLink}
+                    disabled={!publicUrl}
+                    className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                  >
+                    <CopyIcon className="w-3 h-3" />
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
