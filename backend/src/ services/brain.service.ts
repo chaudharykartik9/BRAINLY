@@ -17,12 +17,16 @@ export class BrainService {
   static async toggleShare(userId: string, isPublic: boolean) {
     if (!isPublic) {
       // Take the whole public page offline. Per-item `isPublic` flags are
-      // left untouched so the selection is restored if it's re-enabled.
+      // left untouched — they're irrelevant while there's no live page to
+      // show them on, and get overwritten again on the next share anyway.
       await BrainLink.deleteOne({ userId });
       return { hash: null, isPublic: false };
     }
 
     const hash = await BrainService.ensureBrainLink(userId);
+    // All-or-nothing sharing: turning the public page on publishes every
+    // saved item, rather than requiring a separate per-item selection step.
+    await Content.updateMany({ userId }, { isPublic: true });
     return { hash, isPublic: true };
   }
 
