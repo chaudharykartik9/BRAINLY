@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
 import { LogoIcon } from '../components/icons';
 import { authApi } from '../services/auth.api';
+import { SESSION_EXPIRED_MESSAGE_KEY } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -68,6 +69,16 @@ export const SigninPage: React.FC = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Set by the API client's 401 interceptor when a stale/expired token
+  // forced a redirect here — surfaced once, then cleared.
+  useEffect(() => {
+    const message = sessionStorage.getItem(SESSION_EXPIRED_MESSAGE_KEY);
+    if (message) {
+      setError(message);
+      sessionStorage.removeItem(SESSION_EXPIRED_MESSAGE_KEY);
+    }
+  }, []);
 
   const isFormValid =
     !!email.trim() &&
