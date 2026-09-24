@@ -328,7 +328,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
                 Share
               </button>
             )}
-            <span className="font-medium truncate max-w-28" title={getLinkName(link, type)}>
+            <span className="font-medium whitespace-nowrap" title={getLinkName(link, type)}>
               {getLinkName(link, type)}
             </span>
 
