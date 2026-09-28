@@ -132,7 +132,7 @@ export const ContentFormModal: React.FC<ContentFormModalProps> = ({
       await onSubmit({
         title: title.trim(),
         type,
-        link: link.trim() || undefined,
+        link: type === 'document' ? undefined : link.trim() || undefined,
         notes: notes.trim() || undefined,
         tags,
       });
@@ -185,12 +185,14 @@ export const ContentFormModal: React.FC<ContentFormModalProps> = ({
             required
           />
 
-          <Input
-            label="Link"
-            placeholder="https://..."
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-          />
+          {type !== 'document' && (
+            <Input
+              label="Link"
+              placeholder="https://..."
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+            />
+          )}
 
           <div className="space-y-1.5">
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
