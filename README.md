@@ -1,10 +1,10 @@
 # Brainly — Your Second Brain
 
-A personal knowledge-management app. Save links, tweets, videos, documents, and notes in one place, organize them with tags, pin the important ones to the top, edit them later, and optionally publish your whole collection — or just specific items — as read-only public pages anyone can open via a shareable link.
+A personal knowledge-management app. Save links, tweets, videos, documents, and notes in one place, organize them with tags, pin the important ones to the top, edit them later, and optionally publish your whole collection — or just specific items — as read-only public pages anyone can open via a shareable link. Signed-out visitors land on a marketing home page (`/`) introducing the product before signing up.
 
 ## Features
 
-- **Save & organize** — links, tweets, YouTube videos, documents, and freeform notes, each with tags, optional notes, and a type-specific preview card. Saving a link auto-fetches a title/description/image preview server-side, with SSRF protection against private/internal addresses.
+- **Save & organize** — links, tweets, YouTube videos, documents, and freeform notes, each with tags, optional notes, and a type-specific preview card. Saving a link auto-fetches a title/description/image preview server-side, with SSRF protection against private/internal addresses. Documents are captured as notes only — the "Add Content" form has no Link field for that type.
 - **Edit in place** — update an item's title, type, link, notes, or tags after the fact; no create-only limitation. Unsaved edits prompt a discard-confirmation before they're lost.
 - **Pin to top** — pin your most important items so they always sort first.
 - **Selective public sharing** — turn on a public page for your account, then choose exactly which items appear on it (per-item toggle, not all-or-nothing). Each published item also gets its own standalone public URL.
@@ -104,7 +104,7 @@ All backend routes are mounted under `/api/v1`:
 
 | Method | Route | Auth | Rate limit | Description |
 |---|---|---|---|---|
-| POST | `/auth/signup` | – | 10 / hour / IP | Register a user, returns a JWT |
+| POST | `/auth/signup` | – | 10 / hour / IP | Register a user, returns a JWT. A duplicate email/username returns `409`, not a generic `500` |
 | POST | `/auth/signin` | – | 10 / 15 min / IP | Log in, returns a JWT |
 | POST | `/auth/forgot-password` | – | 5 / hour / IP | Request a password-reset email (always returns the same response, whether or not the email exists) |
 | POST | `/auth/reset-password` | – | – | Complete a reset with `{ token, password }`; returns a fresh JWT (auto-login) |

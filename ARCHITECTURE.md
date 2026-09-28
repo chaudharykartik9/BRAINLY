@@ -86,7 +86,7 @@ Sharing is two independent layers: whether the public page exists at all, and wh
 
 ### Error handling and responses
 
-- Every controller wraps its logic in try/catch and calls `next(error)` on failure; `errorHandler` (`src/middlewares/errorHandler.ts`) logs the stack via `src/utils/ logger.ts` (note the leading space in the filename) and responds `{ success: false, message }` with status 500. Services throw plain `Error` objects with user-facing messages (e.g. `"Invalid credentials"`) — there's no custom `AppError`/status-code-carrying error class, so every thrown error surfaces as HTTP 500 unless it's a Zod validation error.
+- Every controller wraps its logic in try/catch and calls `next(error)` on failure; `errorHandler` (`src/middlewares/errorHandler.ts`) logs the stack via `src/utils/ logger.ts` (note the leading space in the filename) and responds `{ success: false, message }` with status 500. Services throw plain `Error` objects with user-facing messages (e.g. `"Invalid credentials"`) — there's no custom `AppError`/status-code-carrying error class, so every thrown error surfaces as HTTP 500 by default. `AuthController.signup` is the one exception: it catches the specific "already exists" `Error` from `AuthService.signup` and responds `409` directly instead of forwarding to `errorHandler`, since a duplicate account is a client error, not a server failure. Any other new "this is really a 4xx" case needs the same per-controller special-casing until/unless a real `AppError` class is introduced.
 - Zod validation failures are caught inside the `validate` middleware itself and returned as a 400 with a `path`/`message` array — they never reach `errorHandler`.
 - All success/explicit-error responses go through `ApiResponse.success`/`ApiResponse.error` (`src/utils/apiResponse.ts`) for a consistent `{ success, message, data }` envelope.
 
@@ -95,6 +95,7 @@ Sharing is two independent layers: whether the public page exists at all, and wh
 ### Routing (`src/App.tsx`)
 
 ```
+/                                     → PublicOnlyRoute  (HomePage — marketing landing page)
 /signin, /signup, /forgot-password   → PublicOnlyRoute  (redirects to /dashboard if already authed)
 /reset-password/:token               → public, no guard (must work even with a stale session logged in)
 /dashboard                            → ProtectedRoute   (redirects to /signin if not authed)
@@ -122,7 +123,8 @@ No Redux/Zustand/React Query — three React Contexts:
 
 - `components/layout/` — `Navbar` (search, "Add Content", and an avatar dropdown menu with Public Brain / Dark Mode / Sign Out), `Sidebar` (category + tag filters). `AppLayout.tsx` is a dead leftover — `Dashboard.tsx` composes `Navbar`/`Sidebar` directly rather than using it.
 - `components/content/` — `ContentCard` (the live card, with pin/edit/delete actions and a footer share popover) and `ContentPreview` (type-specific preview rendering: tweet, YouTube embed, document, link). `ContentGrid.tsx`, `ContentActions.tsx`, and the whole `embeds/` directory (`TwitterEmbed`, `YoutubeEmbed`, `ArticleEmbed`, `NoteEmbed`) are dead — nothing imports them; `ContentCard`/`ContentPreview` superseded them.
-- `components/modals/` — `ContentFormModal` (create/edit content — the live one), `ShareBrainModal` (master public-page toggle plus a per-item "select what to share" list). `CreateContentModal.tsx` is a dead leftover, superseded by `ContentFormModal`.
+- `components/modals/` — `ContentFormModal` (create/edit content — the live one; the Link field is hidden and forced to `undefined` on submit when the selected type is `document`, since documents are notes-only), `ShareBrainModal` (master public-page toggle plus a per-item "select what to share" list). `CreateContentModal.tsx` is a dead leftover, superseded by `ContentFormModal`.
+- `pages/Home.tsx` — the public marketing landing page mounted at `/`. Self-contained (no data fetching): scroll-aware header with anchor-scroll nav links, a hero, a feature grid, a "how it works" section, and a footer with real social links. Uses the same `ThemeContext` toggle as the authenticated app.
 - `components/common/` — `Button`, `Input`, `Badge`, `Dropdown`, `Modal`, `ConfirmDialog`, `TagInput` primitives, plus shared `Spinner`/`Skeleton`/`CardGridSkeleton` loading components used instead of duplicated inline loading markup.
 - `pages/NotFound.tsx` exists but is dead — the catch-all route (`*`) redirects straight to `/dashboard` rather than rendering it.
 
