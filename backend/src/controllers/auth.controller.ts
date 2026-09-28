@@ -9,6 +9,12 @@ export class AuthController {
       const user = await AuthService.signup(username, email, password);
       return ApiResponse.success(res, user, 'User registered successfully', 201);
     } catch (error) {
+      // A duplicate email/username is a client error (409), not a server
+      // failure — surface it directly instead of falling through to the
+      // generic 500 errorHandler, which would mask the real reason.
+      if (error instanceof Error && error.message === 'User with this email or username already exists') {
+        return ApiResponse.error(res, error.message, 409);
+      }
       next(error);
     }
   }
