@@ -160,3 +160,10 @@ export const MoonIcon: React.FC<IconProps> = ({ className = 'w-4 h-4' }) => (
     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
   </svg>
 );
+
+export const SparkleIcon: React.FC<IconProps> = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+    <path d="M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
+  </svg>
+);
