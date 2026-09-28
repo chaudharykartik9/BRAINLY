@@ -8,6 +8,7 @@ import { Spinner } from './components/common/Spinner';
 // Each route's page is its own chunk, fetched on demand instead of bundled
 // into the initial load — e.g. a signed-out visitor never downloads the
 // (heavier) authenticated dashboard code until they actually sign in.
+const HomePage = lazy(() => import('./pages/Home').then((m) => ({ default: m.HomePage })));
 const SigninPage = lazy(() => import('./pages/Signin').then((m) => ({ default: m.SigninPage })));
 const SignupPage = lazy(() => import('./pages/Signup').then((m) => ({ default: m.SignupPage })));
 const ForgotPasswordPage = lazy(() =>
@@ -58,6 +59,16 @@ export const App: React.FC = () => {
           <BrowserRouter>
             <Suspense fallback={<FullPageSpinner />}>
               <Routes>
+                {/* Marketing home page */}
+                <Route
+                  path="/"
+                  element={
+                    <PublicOnlyRoute>
+                      <HomePage />
+                    </PublicOnlyRoute>
+                  }
+                />
+
                 {/* Public Authentication Routes */}
                 <Route
                   path="/signin"
