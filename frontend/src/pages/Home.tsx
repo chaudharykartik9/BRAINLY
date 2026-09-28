@@ -7,6 +7,9 @@ import {
   CrossIcon,
   DocumentIcon,
   EditIcon,
+  GithubIcon,
+  LayersIcon,
+  LinkedinIcon,
   LinkIcon,
   LogoIcon,
   MenuIcon,
@@ -14,11 +17,22 @@ import {
   PinIcon,
   SearchIcon,
   ShareIcon,
+  ShieldIcon,
   SparkleIcon,
   SunIcon,
   TwitterIcon,
   YoutubeIcon,
 } from '../components/icons';
+
+const socialLinks = [
+  { icon: <TwitterIcon className="w-4 h-4" />, label: 'X (Twitter)', href: 'https://x.com/KartikTush46941' },
+  { icon: <GithubIcon className="w-4 h-4" />, label: 'GitHub', href: 'https://github.com/chaudharykartik9' },
+  {
+    icon: <LinkedinIcon className="w-4 h-4" />,
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/in/kartik-chaudhary9/',
+  },
+];
 
 const features: { icon: React.ReactNode; title: string; description: string }[] = [
   {
@@ -47,6 +61,16 @@ const features: { icon: React.ReactNode; title: string; description: string }[] 
     icon: <SearchIcon className="w-5 h-5" />,
     title: 'Find things fast',
     description: 'Search across titles, notes, and tags, or filter by content type and click-to-filter tag pills.',
+  },
+  {
+    icon: <LayersIcon className="w-5 h-5" />,
+    title: 'Bulk actions',
+    description: 'Multi-select items to pin, unpin, publish, unpublish, or delete them together in one go.',
+  },
+  {
+    icon: <ShieldIcon className="w-5 h-5" />,
+    title: 'Secure sign-in',
+    description: 'Email/password auth with a full forgot-password → reset-link → new-password flow built in.',
   },
   {
     icon: <MoonIcon className="w-5 h-5" />,
@@ -338,6 +362,21 @@ export const HomePage: React.FC = () => {
               A personal knowledge-management app for saving, organizing, and selectively sharing everything worth
               remembering.
             </p>
+            <div className="flex items-center gap-2 mt-5">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  title={social.label}
+                  className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"
+                >
+                  {social.icon}
+                </a>
+              ))}
+            </div>
           </div>
 
           <div className="flex gap-12">
