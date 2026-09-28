@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/common/Button';
+import { useTheme } from '../context/ThemeContext';
 import {
   BookmarkIcon,
   DocumentIcon,
@@ -11,6 +12,7 @@ import {
   PinIcon,
   SearchIcon,
   ShareIcon,
+  SunIcon,
   TwitterIcon,
   YoutubeIcon,
 } from '../components/icons';
@@ -58,6 +60,8 @@ const contentTypes: { icon: React.ReactNode; label: string }[] = [
 ];
 
 export const HomePage: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Header */}
@@ -69,6 +73,15 @@ export const HomePage: React.FC = () => {
           <span className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Brainly</span>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+          >
+            {theme === 'dark' ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
+          </button>
           <Link to="/signin">
             <Button variant="outline" size="sm">
               Sign In
